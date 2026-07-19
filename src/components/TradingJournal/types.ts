@@ -50,4 +50,6 @@ export interface JournalEntry {
   note?: string;
   profit?: number;
   result?: "WIN" | "LOSE" | "DRAW";
+  methodId?: string | null;
+  methodName?: string | null;
 }

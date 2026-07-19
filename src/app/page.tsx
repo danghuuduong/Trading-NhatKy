@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Layout, Menu, Card, Button } from "antd";
+import { Layout, Menu, Button } from "antd";
 import {
   HistoryOutlined,
-  BookOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  NodeIndexOutlined,
 } from "@ant-design/icons";
 import TradingJournal from "@/components/TradingJournal";
+import TradingMethods from "@/components/TradingMethods";
 
 const { Sider, Content } = Layout;
 
 export default function Dashboard() {
-  // Trạng thái chọn menu điều hướng: 'transactions' hoặc 'courses'
+  // Trạng thái chọn menu điều hướng: 'transactions' hoặc 'methods'
   const [selectedKey, setSelectedKey] = useState<string>("transactions");
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
@@ -80,9 +81,9 @@ export default function Dashboard() {
               label: "Nhật ký giao dịch",
             },
             {
-              key: "courses",
-              icon: <BookOutlined className="text-lg" />,
-              label: "Khóa học",
+              key: "methods",
+              icon: <NodeIndexOutlined className="text-lg" />,
+              label: "Phương pháp giao dịch",
             },
           ]}
         />
@@ -97,13 +98,7 @@ export default function Dashboard() {
           {selectedKey === "transactions" ? (
             <TradingJournal />
           ) : (
-            <Card className="border-none shadow-sm h-64 flex items-center justify-center rounded-xl bg-white">
-              <div className="text-center space-y-2">
-                <BookOutlined className="text-4xl text-cyan-400" />
-                <h3 className="text-lg font-bold text-gray-700">Khung giao diện: Khóa học</h3>
-                <p className="text-sm text-gray-400">Nội dung chi tiết của Khóa học sẽ hiển thị tại đây.</p>
-              </div>
-            </Card>
+            <TradingMethods />
           )}
         </Content>
       </Layout>

@@ -23,6 +23,8 @@ export async function GET() {
       note: item.note,
       profit: item.profit,
       result: item.result,
+      methodId: item.methodId ?? null,
+      methodName: item.methodName ?? null,
     }));
     
     return NextResponse.json(mapped);
@@ -55,6 +57,8 @@ export async function POST(request: Request) {
       note: body.note ?? "",
       profit: null,
       result: null,
+      methodId: body.methodId ?? null,
+      methodName: body.methodName ?? null,
       timestamp: new Date(),
     };
 
@@ -94,6 +98,8 @@ export async function PUT(request: Request) {
     if (body.note !== undefined) updateFields.note = body.note;
     if (body.profit !== undefined) updateFields.profit = body.profit;
     if (body.result !== undefined) updateFields.result = body.result;
+    if (body.methodId !== undefined) updateFields.methodId = body.methodId;
+    if (body.methodName !== undefined) updateFields.methodName = body.methodName;
 
     const result = await db.collection("journals").updateOne(
       { _id: new ObjectId(id) },

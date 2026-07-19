@@ -45,6 +45,7 @@ import {
   TimeframeScores,
 } from "./types";
 import RichTextEditor from "./RichTextEditor";
+import { Method } from "../TradingMethods/types";
 
 interface NoteCellProps {
   record: JournalEntry;
@@ -374,6 +375,14 @@ export default function TradingJournal() {
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
   const [expandedEditCardIds, setExpandedEditCardIds] = useState<Set<string>>(new Set());
 
+  // States for Method Verification
+  const [methods, setMethods] = useState<Method[]>([]);
+  const [loadingMethods, setLoadingMethods] = useState(true);
+  const [selectedMethodId, setSelectedMethodId] = useState<string | undefined>(undefined);
+  const [formStepsChecked, setFormStepsChecked] = useState<boolean[]>([]);
+  const [editSelectedMethodId, setEditSelectedMethodId] = useState<string | undefined>(undefined);
+  const [editFormStepsChecked, setEditFormStepsChecked] = useState<boolean[]>([]);
+
   // Watch direction from form for live advice feedback
   const direction = Form.useWatch("direction", journalForm);
   const editDirection = Form.useWatch("direction", editJournalForm);
@@ -418,9 +427,24 @@ export default function TradingJournal() {
     }
   };
 
+  const fetchMethods = async () => {
+    try {
+      const res = await fetch("/api/methods");
+      if (res.ok) {
+        const data = await res.json();
+        setMethods(data);
+      }
+    } catch (e) {
+      console.error("Lỗi khi tải phương pháp giao dịch:", e);
+    } finally {
+      setLoadingMethods(false);
+    }
+  };
+
   useEffect(() => {
     fetchConditions();
     fetchJournals();
+    fetchMethods();
   }, []);
 
   useEffect(() => {
@@ -440,6 +464,88 @@ export default function TradingJournal() {
       return updated;
     });
   }, [conditions]);
+
+  // Reset method form state when modal open/close
+  useEffect(() => {
+    if (isJournalOpen) {
+      setSelectedMethodId(undefined);
+      setFormStepsChecked([]);
+    }
+  }, [isJournalOpen]);
+
+  const handleMethodChange = (methodId: string | undefined) => {
+    setSelectedMethodId(methodId);
+    if (methodId) {
+      const method = methods.find((m) => m.id === methodId);
+      if (method) {
+        setFormStepsChecked(new Array(method.steps.length).fill(false));
+        
+        // Auto check conditions associated with this method
+        setSelectedConditions((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            updated[key] = {
+              ...updated[key],
+              checked: false,
+            };
+          });
+          if (method.conditionIds) {
+            method.conditionIds.forEach((condId) => {
+              if (updated[condId]) {
+                updated[condId] = {
+                  ...updated[condId],
+                  checked: true,
+                };
+              }
+            });
+          }
+          return updated;
+        });
+      } else {
+        setFormStepsChecked([]);
+      }
+    } else {
+      setFormStepsChecked([]);
+    }
+  };
+
+  const isSaveDisabled = (() => {
+    if (conditions.length === 0) return true;
+    if (selectedMethodId) {
+      const method = methods.find((m) => m.id === selectedMethodId);
+      if (method && method.steps.length > 0) {
+        const completedCount = formStepsChecked.filter(Boolean).length;
+        return completedCount < method.steps.length;
+      }
+    }
+    return false;
+  })();
+
+  const handleEditMethodChange = (methodId: string | undefined) => {
+    setEditSelectedMethodId(methodId);
+    if (methodId) {
+      const method = methods.find((m) => m.id === methodId);
+      if (method) {
+        setEditFormStepsChecked(new Array(method.steps.length).fill(false));
+      } else {
+        setEditFormStepsChecked([]);
+      }
+    } else {
+      setEditFormStepsChecked([]);
+    }
+  };
+
+  const isEditSaveDisabled = (() => {
+    if (conditions.length === 0) return true;
+    if (editSelectedMethodId) {
+      const method = methods.find((m) => m.id === editSelectedMethodId);
+      if (method && method.steps.length > 0) {
+        const completedCount = editFormStepsChecked.filter(Boolean).length;
+        return completedCount < method.steps.length;
+      }
+    }
+    return false;
+  })();
 
   // ---- SCORE CALCULATION ----
   const calcCondScore = (cond: Condition, state: SelectedConditionState): number => {
@@ -601,6 +707,7 @@ export default function TradingJournal() {
           };
         });
 
+      const selectedMethod = methods.find((m) => m.id === selectedMethodId);
       const payload = {
         direction: values.direction,
         symbol: values.symbol ?? null,
@@ -612,6 +719,8 @@ export default function TradingJournal() {
         tp: values.tp ?? null,
         vol: values.vol ?? null,
         note: values.note ?? "",
+        methodId: selectedMethodId ?? null,
+        methodName: selectedMethod ? selectedMethod.name : null,
       };
 
       const res = await fetch("/api/journals", {
@@ -656,7 +765,20 @@ export default function TradingJournal() {
       note: journal.note ?? "",
       profit: journal.profit,
       result: journal.result,
+      methodId: journal.methodId ?? undefined,
     });
+    setEditSelectedMethodId(journal.methodId || undefined);
+
+    if (journal.methodId) {
+      const method = methods.find((m) => m.id === journal.methodId);
+      if (method) {
+        setEditFormStepsChecked(new Array(method.steps.length).fill(true));
+      } else {
+        setEditFormStepsChecked([]);
+      }
+    } else {
+      setEditFormStepsChecked([]);
+    }
 
     const initialEditStates: Record<string, SelectedConditionState> = {};
     conditions.forEach((c) => {
@@ -723,6 +845,7 @@ export default function TradingJournal() {
           };
         });
 
+      const selectedMethod = methods.find((m) => m.id === editSelectedMethodId);
       const payload = {
         direction: values.direction,
         symbol: values.symbol ?? null,
@@ -736,6 +859,8 @@ export default function TradingJournal() {
         note: values.note ?? "",
         profit: values.profit ?? null,
         result: values.result ?? null,
+        methodId: editSelectedMethodId ?? null,
+        methodName: selectedMethod ? selectedMethod.name : null,
       };
       const res = await fetch(`/api/journals?id=${editingJournal.id}`, {
         method: "PUT",
@@ -747,6 +872,8 @@ export default function TradingJournal() {
         await fetchJournals();
         editJournalForm.resetFields();
         setEditSelectedConditions({});
+        setEditSelectedMethodId(undefined);
+        setEditFormStepsChecked([]);
         setIsEditJournalOpen(false);
         setEditingJournal(null);
       } else {
@@ -1082,6 +1209,20 @@ export default function TradingJournal() {
           </span>
         ) : (
           <span className="text-gray-300 text-xs">—</span>
+        ),
+    },
+    {
+      title: "Phương pháp",
+      dataIndex: "methodName",
+      key: "methodName",
+      width: 140,
+      render: (val: string | null) =>
+        val ? (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 font-bold text-[10px] border border-cyan-100 uppercase tracking-wider">
+            {val}
+          </span>
+        ) : (
+          <span className="text-gray-400 italic text-[11px]">Không dùng</span>
         ),
     },
     {
@@ -2121,6 +2262,59 @@ export default function TradingJournal() {
                 </Form.Item>
               </div>
 
+              {/* Chọn Phương pháp Giao dịch */}
+              <div className="mt-4">
+                <Form.Item
+                  name="methodId"
+                  label={<span className="font-bold text-gray-700">Phương pháp sử dụng (Quy trình)</span>}
+                  className="mb-0"
+                >
+                  <Select
+                    placeholder="Chọn phương pháp để kích hoạt quy trình vào lệnh..."
+                    className="w-full"
+                    allowClear
+                    onChange={handleMethodChange}
+                    options={methods.map((m) => ({
+                      label: m.name,
+                      value: m.id,
+                    }))}
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Checklist Quy trình thực hiện */}
+              {selectedMethodId && (() => {
+                const method = methods.find((m) => m.id === selectedMethodId);
+                if (!method || !method.steps || method.steps.length === 0) return null;
+                return (
+                  <div className="mt-4 p-4 rounded-xl bg-cyan-50/20 border border-cyan-100/50">
+                    <label className="block font-bold text-cyan-800 text-xs uppercase tracking-wider mb-3">
+                      📋 Checklist quy trình bắt buộc ({formStepsChecked.filter(Boolean).length}/{method.steps.length})
+                    </label>
+                    <div className="space-y-2.5">
+                      {method.steps.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5">
+                          <Checkbox
+                            checked={formStepsChecked[idx] || false}
+                            onChange={(e) => {
+                              const updated = [...formStepsChecked];
+                              updated[idx] = e.target.checked;
+                              setFormStepsChecked(updated);
+                            }}
+                            className="font-medium text-xs text-gray-700 select-none items-start flex"
+                          >
+                            <span className="font-bold text-cyan-600 mr-1 shrink-0">Bước {idx + 1}:</span>
+                            <span className="leading-snug">{step}</span>
+                          </Checkbox>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+
+
               <div className="mt-4">
                 <label className="block font-bold text-gray-700 mb-3">Danh sách điều kiện</label>
                 {loadingConditions ? (
@@ -2277,8 +2471,8 @@ export default function TradingJournal() {
                 <Button
                   type="primary"
                   htmlType="submit"
-                  className="flex-1 rounded-xl h-11 bg-cyan-400 hover:bg-cyan-500 border-none text-gray-900 font-black shadow-md shadow-cyan-100"
-                  disabled={conditions.length === 0}
+                  className="flex-1 rounded-xl h-11 bg-cyan-400 hover:bg-cyan-500 border-none text-gray-900 font-black shadow-md shadow-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSaveDisabled}
                 >
                   Lưu Nhật Ký
                 </Button>
@@ -2389,7 +2583,15 @@ export default function TradingJournal() {
       <Modal
         title={<span className="text-lg font-black text-gray-800">✏️ Sửa Nhật Ký Giao Dịch</span>}
         open={isEditJournalOpen}
-        onCancel={() => { editJournalForm.resetFields(); setEditSelectedConditions({}); setExpandedEditCardIds(new Set()); setIsEditJournalOpen(false); setEditingJournal(null); }}
+        onCancel={() => {
+          editJournalForm.resetFields();
+          setEditSelectedConditions({});
+          setEditSelectedMethodId(undefined);
+          setEditFormStepsChecked([]);
+          setExpandedEditCardIds(new Set());
+          setIsEditJournalOpen(false);
+          setEditingJournal(null);
+        }}
         footer={null}
         centered
         width={860}
@@ -2445,6 +2647,57 @@ export default function TradingJournal() {
                   </Radio.Group>
                 </Form.Item>
               </div>
+
+              {/* Chọn Phương pháp Giao dịch (Edit) */}
+              <div className="mt-4">
+                <Form.Item
+                  name="methodId"
+                  label={<span className="font-bold text-gray-700">Phương pháp sử dụng (Quy trình)</span>}
+                  className="mb-0"
+                >
+                  <Select
+                    placeholder="Chọn phương pháp để kích hoạt quy trình vào lệnh..."
+                    className="w-full"
+                    allowClear
+                    onChange={handleEditMethodChange}
+                    options={methods.map((m) => ({
+                      label: m.name,
+                      value: m.id,
+                    }))}
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Checklist Quy trình thực hiện (Edit) */}
+              {editSelectedMethodId && (() => {
+                const method = methods.find((m) => m.id === editSelectedMethodId);
+                if (!method || !method.steps || method.steps.length === 0) return null;
+                return (
+                  <div className="mt-4 p-4 rounded-xl bg-cyan-50/20 border border-cyan-100/50">
+                    <label className="block font-bold text-cyan-800 text-xs uppercase tracking-wider mb-3">
+                      📋 Checklist quy trình bắt buộc ({editFormStepsChecked.filter(Boolean).length}/{method.steps.length})
+                    </label>
+                    <div className="space-y-2.5">
+                      {method.steps.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5">
+                          <Checkbox
+                            checked={editFormStepsChecked[idx] || false}
+                            onChange={(e) => {
+                              const updated = [...editFormStepsChecked];
+                              updated[idx] = e.target.checked;
+                              setEditFormStepsChecked(updated);
+                            }}
+                            className="font-medium text-xs text-gray-700 select-none items-start flex"
+                          >
+                            <span className="font-bold text-cyan-600 mr-1 shrink-0">Bước {idx + 1}:</span>
+                            <span className="leading-snug">{step}</span>
+                          </Checkbox>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Condition list */}
               <div className="mb-4">
@@ -2623,7 +2876,14 @@ export default function TradingJournal() {
               {/* Action buttons */}
               <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
                 <Button
-                  onClick={() => { editJournalForm.resetFields(); setEditSelectedConditions({}); setIsEditJournalOpen(false); setEditingJournal(null); }}
+                  onClick={() => {
+                    editJournalForm.resetFields();
+                    setEditSelectedConditions({});
+                    setEditSelectedMethodId(undefined);
+                    setEditFormStepsChecked([]);
+                    setIsEditJournalOpen(false);
+                    setEditingJournal(null);
+                  }}
                   className="flex-1 rounded-xl h-11 font-semibold border-gray-200 hover:border-cyan-400 hover:text-cyan-500"
                 >
                   Hủy
@@ -2631,7 +2891,8 @@ export default function TradingJournal() {
                 <Button
                   type="primary"
                   htmlType="submit"
-                  className="flex-1 rounded-xl h-11 bg-cyan-400 hover:bg-cyan-500 border-none text-gray-900 font-black shadow-md shadow-cyan-100"
+                  className="flex-1 rounded-xl h-11 bg-cyan-400 hover:bg-cyan-500 border-none text-gray-900 font-black shadow-md shadow-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isEditSaveDisabled}
                 >
                   Cập nhật
                 </Button>
