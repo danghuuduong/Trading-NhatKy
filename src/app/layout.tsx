@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Hệ thống Quản lý Giao dịch & Khóa học trực tuyến",
   description: "Trang quản lý nhật ký giao dịch tài chính và theo dõi các khóa học chuyên sâu với giao diện hiện đại.",
+  icons: {
+    icon: "/logoChinh.png",
+  },
 };
 
 export default function RootLayout({

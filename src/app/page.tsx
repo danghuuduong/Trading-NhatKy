@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Layout, Menu, Card, Avatar } from "antd";
+import { Layout, Menu, Card, Button } from "antd";
 import {
   HistoryOutlined,
   BookOutlined,
-  UserOutlined,
-  GlobalOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import TradingJournal from "@/components/TradingJournal";
 
@@ -23,24 +23,46 @@ export default function Dashboard() {
       <Sider
         collapsible
         collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
         theme="light"
         width={260}
-        className="shadow-md border-r border-gray-100 sticky top-0 h-screen overflow-y-auto"
+        className="shadow-md border-r border-gray-100 min-h-screen"
+        trigger={null}
       >
         {/* Logo Area */}
-        <div className="p-5 flex items-center gap-3 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-200">
-            <GlobalOutlined className="text-xl" />
+        <div className="p-5 flex flex-col gap-3 border-b border-gray-100">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden p-1">
+                <img src="/logoChinh.png" alt="Logo" className="w-full h-full object-contain" />
+              </div>
+              {!collapsed && (
+                <div className="flex flex-col">
+                  <span className="font-black text-lg tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                    NHẬT KÝ
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                    NHỚ TUÂN THỦ
+                  </span>
+                </div>
+              )}
+            </div>
+            {!collapsed && (
+              <Button
+                type="text"
+                icon={<MenuFoldOutlined className="text-gray-500 hover:text-cyan-500" />}
+                onClick={() => setCollapsed(true)}
+                className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-gray-100"
+              />
+            )}
           </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-black text-lg tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                NEXUS
-              </span>
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                Dashboard V1.0
-              </span>
+          {collapsed && (
+            <div className="flex justify-center w-full mt-1">
+              <Button
+                type="text"
+                icon={<MenuUnfoldOutlined className="text-gray-500 hover:text-cyan-500" />}
+                onClick={() => setCollapsed(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-gray-100"
+              />
             </div>
           )}
         </div>
@@ -65,16 +87,7 @@ export default function Dashboard() {
           ]}
         />
 
-        {/* Thông tin tài khoản phía dưới Sidebar */}
-        {!collapsed && (
-          <div className="absolute bottom-16 left-4 right-4 p-4 rounded-xl bg-gradient-to-br from-gray-50 to-cyan-50/30 border border-cyan-100/30 flex items-center gap-3">
-            <Avatar size="default" icon={<UserOutlined />} className="bg-cyan-400 text-white shadow" />
-            <div className="overflow-hidden">
-              <h4 className="text-xs font-bold text-gray-700 truncate">Tài khoản chính</h4>
-              <p className="text-[10px] text-cyan-600 font-bold truncate">Premium Account</p>
-            </div>
-          </div>
-        )}
+
       </Sider>
 
       {/* Main Content Area bên phải */}
