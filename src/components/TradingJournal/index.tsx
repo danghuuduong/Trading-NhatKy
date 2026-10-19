@@ -479,7 +479,7 @@ export default function TradingJournal() {
       const method = methods.find((m) => m.id === methodId);
       if (method) {
         setFormStepsChecked(new Array(method.steps.length).fill(false));
-        
+
         // Auto check conditions associated with this method
         setSelectedConditions((prev) => {
           const updated = { ...prev };
@@ -1201,7 +1201,7 @@ export default function TradingJournal() {
       title: "Cặp / Đồng",
       dataIndex: "symbol",
       key: "symbol",
-      width: 130,
+      width: 100,
       render: (val: string | null) =>
         val ? (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-xs border border-indigo-100">
@@ -1241,17 +1241,17 @@ export default function TradingJournal() {
           {
             key: "BUY",
             label: (
-              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+              <div className="flex items-center gap-2 text-emerald-600 font-bold">
                 🟩 BUY
-              </span>
+              </div>
             ),
           },
           {
             key: "SELL",
             label: (
-              <span className="flex items-center gap-1.5 text-rose-500 font-bold">
+              <div className="flex items-center gap-1.5 text-rose-500 font-bold">
                 🟥 SELL
-              </span>
+              </div>
             ),
           },
         ];
@@ -1270,7 +1270,7 @@ export default function TradingJournal() {
             trigger={["click"]}
           >
             <span
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs cursor-pointer hover:opacity-80 transition-all select-none border ${isBuy
+              className={`inline-flex whitespace-nowrap items-center gap-1 px-2 py-1 rounded-full font-bold text-xs cursor-pointer hover:opacity-80 transition-all select-none border ${isBuy
                 ? "bg-emerald-50 text-emerald-600 border-emerald-200"
                 : "bg-rose-50 text-rose-600 border-rose-200"
                 }`}
@@ -1328,7 +1328,7 @@ export default function TradingJournal() {
     {
       title: "Nhận định",
       key: "assessment",
-      width: 200,
+      width: 300,
       render: (_: any, record: JournalEntry) => {
         const pct = Math.round(Math.min((record.totalScore / 100) * 100, 100));
         const { advice, colorClass, bgClass, borderClass, emoji } = getAssessment(pct);
@@ -1346,7 +1346,7 @@ export default function TradingJournal() {
         }
 
         return (
-          <div className={`flex flex-col gap-1 px-2 py-1.5 rounded-xl border ${bgClass} ${borderClass}`}>
+          <div className={`min-w-[200px] flex flex-col gap-1 px-2 py-1.5 rounded-xl border ${bgClass} ${borderClass}`}>
             <div className="flex items-center gap-1.5">
               <span className="text-xl leading-none">{face}</span>
               <span className={`text-[10px] font-black uppercase tracking-wide ${colorClass}`}>
@@ -2263,7 +2263,7 @@ export default function TradingJournal() {
               </div>
 
               {/* Chọn Phương pháp Giao dịch */}
-              <div className="mt-4">
+              <div className="">
                 <Form.Item
                   name="methodId"
                   label={<span className="font-bold text-gray-700">Phương pháp sử dụng (Quy trình)</span>}
@@ -2649,7 +2649,7 @@ export default function TradingJournal() {
               </div>
 
               {/* Chọn Phương pháp Giao dịch (Edit) */}
-              <div className="mt-4">
+              <div>
                 <Form.Item
                   name="methodId"
                   label={<span className="font-bold text-gray-700">Phương pháp sử dụng (Quy trình)</span>}

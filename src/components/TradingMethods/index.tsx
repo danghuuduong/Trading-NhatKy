@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   Button,
@@ -15,6 +15,7 @@ import {
   Empty,
   App,
 } from "antd";
+import type { InputRef } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -32,11 +33,34 @@ export default function TradingMethods() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingMethod, setEditingMethod] = useState<Method | null>(null);
-  
+
   // State for dynamic steps in the form
   const [formSteps, setFormSteps] = useState<string[]>([]);
-  
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  const inputRefs = useRef<(InputRef | null)[]>([]);
+
+  useEffect(() => {
+    if (focusIndex !== null && inputRefs.current[focusIndex]) {
+      inputRefs.current[focusIndex]?.focus();
+      setFocusIndex(null);
+    }
+  }, [focusIndex, formSteps]);
+
   const [form] = Form.useForm();
+
+  // Sync form values when modal opens
+  useEffect(() => {
+    if (isModalOpen) {
+      if (editingMethod) {
+        form.setFieldsValue({
+          name: editingMethod.name,
+          conditionIds: editingMethod.conditionIds || [],
+        });
+      } else {
+        form.resetFields();
+      }
+    }
+  }, [isModalOpen, editingMethod, form]);
 
   // Load methods and conditions
   const fetchData = async () => {
@@ -46,14 +70,14 @@ export default function TradingMethods() {
         fetch("/api/methods"),
         fetch("/api/conditions"),
       ]);
-      
+
       if (!methodsRes.ok || !conditionsRes.ok) {
         throw new Error("Failed to load data");
       }
-      
+
       const methodsData = await methodsRes.json();
       const conditionsData = await conditionsRes.json();
-      
+
       setMethods(methodsData);
       setConditions(conditionsData);
     } catch (error: any) {
@@ -71,7 +95,6 @@ export default function TradingMethods() {
   const handleAddClick = () => {
     setEditingMethod(null);
     setFormSteps([""]); // Start with 1 empty step
-    form.resetFields();
     setIsModalOpen(true);
   };
 
@@ -79,10 +102,6 @@ export default function TradingMethods() {
   const handleEditClick = (method: Method) => {
     setEditingMethod(method);
     setFormSteps(method.steps.length > 0 ? [...method.steps] : [""]);
-    form.setFieldsValue({
-      name: method.name,
-      conditionIds: method.conditionIds,
-    });
     setIsModalOpen(true);
   };
 
@@ -103,6 +122,15 @@ export default function TradingMethods() {
   // Add step to form
   const addStepField = () => {
     setFormSteps([...formSteps, ""]);
+    setFocusIndex(formSteps.length);
+  };
+
+  // Add step directly after a specific index (when pressing Enter)
+  const addStepFieldAfter = (index: number) => {
+    const updated = [...formSteps];
+    updated.splice(index + 1, 0, "");
+    setFormSteps(updated);
+    setFocusIndex(index + 1);
   };
 
   // Remove step from form
@@ -123,7 +151,7 @@ export default function TradingMethods() {
   const handleModalSubmit = async (values: any) => {
     // Filter out empty steps
     const cleanedSteps = formSteps.map(s => s.trim()).filter(s => s !== "");
-    
+
     if (cleanedSteps.length === 0) {
       message.warning("Vui lòng nhập ít nhất một bước trong quy trình!");
       return;
@@ -157,7 +185,7 @@ export default function TradingMethods() {
           ? "Cập nhật phương pháp thành công"
           : "Thêm phương pháp mới thành công"
       );
-      
+
       setIsModalOpen(false);
       fetchData();
     } catch (error: any) {
@@ -199,9 +227,9 @@ export default function TradingMethods() {
         </Button>
       </div>
 
-      {/* Grid List of Strategies */}
+      {/* List of Strategies (Full width, stacked row by row) */}
       {methods.length === 0 ? (
-        <Card className="border-none shadow-sm rounded-xl py-12">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
           <Empty
             description={
               <span className="text-gray-400">
@@ -209,30 +237,35 @@ export default function TradingMethods() {
               </span>
             }
           />
-        </Card>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-5 w-full">
           {methods.map((method) => (
-            <Card
+            <div
               key={method.id}
-              className="border border-gray-100 shadow-sm rounded-2xl hover:shadow-md hover:border-cyan-300 hover:shadow-cyan-50/50 transition-all duration-300 flex flex-col bg-white overflow-hidden group"
-              styles={{
-                body: { padding: "20px", display: "flex", flexDirection: "column", height: "100%" }
-              }}
+              className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-cyan-200 transition-all duration-300 w-full group flex flex-col gap-4"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 border-b border-gray-50 pb-3 mb-4">
-                <h3 className="font-bold text-base text-gray-800 tracking-tight group-hover:text-cyan-600 transition-colors">
-                  {method.name}
-                </h3>
-                <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+              {/* Header: Title, Step Count Badge & Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="font-bold text-lg text-gray-800 tracking-tight group-hover:text-cyan-600 transition-colors">
+                    {method.name}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-50 text-cyan-700 border border-cyan-100">
+                    {method.steps.length} bước quy trình
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <Button
-                    type="text"
-                    icon={<EditOutlined className="text-gray-500 hover:text-cyan-500 text-sm" />}
+                    type="default"
+                    icon={<EditOutlined className="text-cyan-600 text-sm" />}
                     onClick={() => handleEditClick(method)}
-                    size="small"
-                    className="rounded-lg hover:bg-gray-100 flex items-center justify-center w-7 h-7"
-                  />
+                    size="middle"
+                    className="rounded-xl border-gray-200 hover:border-cyan-400 hover:text-cyan-600 font-medium"
+                  >
+                    Chỉnh sửa
+                  </Button>
                   <Popconfirm
                     title="Xóa phương pháp này?"
                     description="Tất cả cài đặt quy trình của phương pháp sẽ bị xóa vĩnh viễn."
@@ -242,28 +275,30 @@ export default function TradingMethods() {
                     okButtonProps={{ danger: true }}
                   >
                     <Button
-                      type="text"
+                      type="default"
                       danger
                       icon={<DeleteOutlined className="text-rose-500 text-sm" />}
-                      size="small"
-                      className="rounded-lg hover:bg-rose-50 flex items-center justify-center w-7 h-7"
-                    />
+                      size="middle"
+                      className="rounded-xl border-rose-200 hover:bg-rose-50 font-medium"
+                    >
+                      Xóa
+                    </Button>
                   </Popconfirm>
                 </div>
               </div>
 
               {/* Conditions / Indicators */}
-              <div className="mb-5">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
-                  Chỉ báo sử dụng
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest shrink-0">
+                  Chỉ báo sử dụng:
                 </span>
-                <div className="flex flex-wrap gap-1.5 min-h-[26px]">
+                <div className="flex flex-wrap gap-1.5 items-center">
                   {method.conditionIds && method.conditionIds.length > 0 ? (
                     method.conditionIds.map((condId) => (
                       <Tag
                         key={condId}
                         color="cyan"
-                        className="rounded-lg px-2 py-0.5 border-cyan-100 text-[11px] font-semibold text-cyan-700 bg-cyan-50/50 m-0"
+                        className="rounded-lg px-2.5 py-1 border-cyan-100 text-xs font-semibold text-cyan-700 bg-cyan-50/60 m-0"
                       >
                         {getConditionName(condId)}
                       </Tag>
@@ -274,36 +309,31 @@ export default function TradingMethods() {
                 </div>
               </div>
 
-              {/* Workflow / Steps */}
-              <div className="flex-1">
+              {/* Workflow / Steps - Horizontal Grid */}
+              <div className="pt-2">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-3">
                   Quy trình thực hiện
                 </span>
-                <Steps
-                  direction="vertical"
-                  size="small"
-                  current={-1} // Keeps all steps pending/gray for checklist appearance
-                  className="methods-steps-timeline"
-                  items={method.steps.map((step, idx) => ({
-                    title: (
-                      <span className="text-xs font-semibold text-gray-700">
-                        Bước {idx + 1}
-                      </span>
-                    ),
-                    description: (
-                      <p className="text-xs text-gray-500 mt-0.5 font-medium leading-relaxed">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {method.steps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="p-1 rounded-xl bg-gray-50/80 border border-gray-100 hover:bg-cyan-50/30 hover:border-cyan-200 transition-all flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-cyan-100 border border-cyan-300 text-cyan-700 font-bold text-[10px] flex items-center justify-center shadow-sm shrink-0">
+                          {idx + 1}
+                        </div>
+                        <span className="text-xs font-bold text-gray-700">Bước {idx + 1}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 font-medium leading-relaxed pl-7">
                         {step}
                       </p>
-                    ),
-                    icon: (
-                      <div className="w-5 h-5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-600 font-bold text-[10px] flex items-center justify-center shadow-inner">
-                        {idx + 1}
-                      </div>
-                    )
-                  }))}
-                />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
@@ -318,7 +348,7 @@ export default function TradingMethods() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         className="rounded-2xl overflow-hidden"
         width={600}
       >
@@ -337,6 +367,12 @@ export default function TradingMethods() {
             <Input
               placeholder="Ví dụ: SMC + Quasimodo, Breakout D1, EMA Cross..."
               className="h-11 rounded-xl border-gray-200 hover:border-cyan-400 focus:border-cyan-400 focus:shadow-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  inputRefs.current[0]?.focus();
+                }
+              }}
             />
           </Form.Item>
 
@@ -376,7 +412,7 @@ export default function TradingMethods() {
                 Thêm bước
               </Button>
             </div>
-            
+
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
               {formSteps.map((stepText, index) => (
                 <div key={index} className="flex gap-2 items-center">
@@ -384,9 +420,18 @@ export default function TradingMethods() {
                     S{index + 1}
                   </div>
                   <Input
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
                     placeholder={`Nội dung bước ${index + 1} (Ví dụ: Chờ giá hồi về vùng FVG của H4...)`}
                     value={stepText}
                     onChange={(e) => handleStepChange(index, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                        e.preventDefault();
+                        addStepFieldAfter(index);
+                      }
+                    }}
                     className="h-10 rounded-xl border-gray-200 hover:border-cyan-400 focus:border-cyan-400 focus:shadow-none"
                   />
                   <Button
