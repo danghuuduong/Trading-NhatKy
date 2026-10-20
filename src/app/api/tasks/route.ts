@@ -6,13 +6,17 @@ export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const tasks = await db.collection("urgent_tasks").find({}).toArray();
+    const tasks = await db
+      .collection("urgent_tasks")
+      .find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .toArray();
 
     const mapped = tasks.map((item) => ({
       id: item._id.toString(),
       title: item.title,
       dueTime: item.dueTime,
-      priority: item.priority || "MEDIUM",
+      priority: item.priority || "LOW",
       status: item.status || "PENDING",
       note: item.note || "",
       createdAt: item.createdAt,
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
     const newTask = {
       title: body.title.trim(),
       dueTime: body.dueTime || new Date().toISOString(),
-      priority: body.priority || "MEDIUM",
+      priority: body.priority || "LOW",
       status: body.status || "PENDING",
       note: body.note ? body.note.trim() : "",
       createdAt: new Date(),

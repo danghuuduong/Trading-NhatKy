@@ -22,6 +22,7 @@ import {
   EditOutlined,
   MinusCircleOutlined,
   CheckCircleOutlined,
+  ApartmentOutlined,
 } from "@ant-design/icons";
 import { Method } from "./types";
 import { Condition } from "../TradingJournal/types";
@@ -211,11 +212,16 @@ export default function TradingMethods() {
     <div className="space-y-6">
       {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Phương pháp Giao dịch</h2>
-          <p className="text-sm text-gray-500">
-            Quản lý các chiến lược, liên kết chỉ báo kỹ thuật và thiết lập quy trình từng bước chuẩn hóa.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-md shadow-cyan-200 text-white text-lg shrink-0">
+            <ApartmentOutlined />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 tracking-tight m-0">Phương pháp Giao dịch</h2>
+            <p className="text-xs sm:text-sm text-gray-500 m-0 mt-0.5">
+              Quản lý các chiến lược, liên kết chỉ báo kỹ thuật và thiết lập quy trình từng bước chuẩn hóa.
+            </p>
+          </div>
         </div>
         <Button
           type="primary"

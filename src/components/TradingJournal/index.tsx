@@ -1198,7 +1198,7 @@ export default function TradingJournal() {
 
   const journalColumns = [
     {
-      title: "Cặp / Đồng",
+      title: "Đồng",
       dataIndex: "symbol",
       key: "symbol",
       width: 100,
@@ -1370,7 +1370,7 @@ export default function TradingJournal() {
             key: "PENDING",
             label: (
               <span className="font-bold text-amber-500">
-                Đang chờ kết quả
+                Đang chờ
               </span>
             ),
           },
@@ -1421,7 +1421,7 @@ export default function TradingJournal() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
-                  Đang chờ kết quả
+                  Đang chờ
                   <DownOutlined className="text-[9px] opacity-60" />
                 </span>
               ) : record.result === "WIN" ? (
@@ -1450,7 +1450,9 @@ export default function TradingJournal() {
       key: "profit",
       width: 120,
       render: (_: any, record: JournalEntry) => (
-        <ProfitCell record={record} onSave={handleUpdateProfit} />
+        <div className="min-w-[75px]">
+          <ProfitCell record={record} onSave={handleUpdateProfit} />
+        </div>
       ),
     },
     {
@@ -1516,16 +1518,21 @@ export default function TradingJournal() {
         }}
       >
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 ">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
-              Nhật ký Giao dịch
-            </h2>
-            <p className="text-sm text-gray-400">
-              Đánh giá chất lượng lệnh trước khi vào lệnh.
-            </p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-200 text-white text-lg shrink-0">
+              <BookOutlined />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight m-0">
+                Nhật ký Giao dịch
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-400 m-0 mt-0.5">
+                Đánh giá chất lượng lệnh trước khi vào lệnh.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-start sm:self-auto">
             {activeTab === "conditions" && (
               <Button
                 onClick={() => { condForm.resetFields(); setNewSubConds([]); setIsCondOpen(true); }}
