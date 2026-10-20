@@ -498,191 +498,202 @@ export default function UrgentTasks() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header & Page Title */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        {/* Hàng 1: Tiêu đề + nút thêm */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center shadow-md shadow-rose-200 text-white text-lg">
-              <FireOutlined />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-gray-800 tracking-tight m-0">
-                Việc Cần Làm Gấp
-              </h1>
-              <p className="text-xs text-gray-500 font-medium m-0 mt-0.5">
-                Quản lý các nhiệm vụ khẩn cấp, theo dõi tiến độ và thời hạn tức thời
-              </p>
-            </div>
-          </div>
-
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreateClick}
-            className="h-11 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 border-none text-white font-bold shadow-md shadow-rose-200 flex items-center gap-2"
-          >
-            Thêm việc mới
-          </Button>
-        </div>
-
-        {/* Hàng 2: Thống kê */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-1 pt-6 border-t border-gray-100">
-          <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-                Tổng công việc
-              </span>
-              <span className="text-2xl font-black text-gray-800 mt-1 block">
-                {stats.total}
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 text-base">
-              <CalendarOutlined />
-            </div>
-          </div>
-
-          <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider block">
-                Khẩn cấp
-              </span>
-              <span className="text-2xl font-black text-rose-600 mt-1 block">
-                {stats.urgent}
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 text-base">
-              <FireOutlined />
-            </div>
-          </div>
-
-          <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider block">
-                Đang làm
-              </span>
-              <span className="text-2xl font-black text-amber-600 mt-1 block">
-                {stats.inProgress}
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 text-base">
-              <SyncOutlined spin={stats.inProgress > 0} />
-            </div>
-          </div>
-
-          <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">
-                Đã hoàn thành
-              </span>
-              <span className="text-2xl font-black text-emerald-600 mt-1 block">
-                {stats.completed}
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-base">
-              <CheckCircleFilled className="text-emerald-500 text-sm shrink-0" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-
-      {/* Filter + Table: Chung 1 Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Filter Bar */}
-        <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-3 border-b border-gray-100">
-          {/* Tìm kiếm bên trái */}
-          <Input
-            prefix={<SearchOutlined className="text-gray-400" />}
-            placeholder="Tìm kiếm công việc..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            className="w-full md:w-72 h-10 rounded-xl border-gray-200 hover:border-rose-400 focus:border-rose-400"
-          />
-
-          {/* Bộ lọc bên phải: nằm ngang */}
-          <div className="flex flex-row flex-nowrap items-center gap-3 w-full md:w-auto">
-            <Select
-              value={filterPriority}
-              onChange={setFilterPriority}
-              className="w-36 h-10 shrink-0"
-              options={[
-                { value: "ALL", label: "Tất cả mức độ" },
-                { value: "URGENT", label: "🔥 Khẩn cấp" },
-                { value: "HIGH", label: "⚡ Cao" },
-                { value: "MEDIUM", label: "⭐ Trung bình" },
-                { value: "LOW", label: "🌱 Thấp" },
-              ]}
-            />
-
-            <Select
-              value={filterStatus}
-              onChange={setFilterStatus}
-              className="w-40 h-10 shrink-0"
-              options={[
-                { value: "ALL", label: "Tất cả trạng thái" },
-                { value: "PENDING", label: "— Chưa làm" },
-                { value: "IN_PROGRESS", label: "🟡 Đang làm" },
-                { value: "COMPLETED", label: "✅ Hoàn thành" },
-              ]}
-            />
-
-            {/* Xóa hàng loạt */}
-            {selectedRowKeys.length > 0 && (
-              <div className="flex items-center gap-3 bg-rose-50/70 border border-rose-200 px-4 py-2 rounded-xl animate-fadeIn shrink-0">
-                <span className="text-xs font-bold text-rose-700 whitespace-nowrap">
-                  Đã chọn <span className="underline">{selectedRowKeys.length}</span> công việc
-                </span>
-
-                <Popconfirm
-                  title={`Xóa tất cả ${selectedRowKeys.length} công việc đã chọn?`}
-                  description="Các công việc này sẽ bị xóa hoàn toàn khỏi cơ sở dữ liệu."
-                  onConfirm={handleDeleteBatch}
-                  okText="Xóa tất cả"
-                  cancelText="Hủy"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button
-                    type="primary"
-                    danger
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    className="rounded-lg font-bold shadow-sm"
-                  >
-                    Xóa đã chọn
-                  </Button>
-                </Popconfirm>
+    <div className="space-y-6">
+      <Card
+        className="rounded-2xl"
+        styles={{
+          body: {
+            padding: 24,
+          },
+        }}
+        style={{
+          background: "#fff",
+          border: "1px solid #f0f0f0",
+          boxShadow: "0 12px 28px rgba(0, 0, 0, 0.12)",
+        }}
+      >
+        {/* Header & Page Title */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          {/* Hàng 1: Tiêu đề + nút thêm */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center shadow-md shadow-rose-200 text-white text-lg">
+                <FireOutlined />
               </div>
-            )}
+              <div>
+                <h1 className="text-xl font-black text-gray-800 tracking-tight m-0">
+                  Việc Cần Làm Gấp
+                </h1>
+                <p className="text-xs text-gray-500 font-medium m-0 mt-0.5">
+                  Quản lý các nhiệm vụ khẩn cấp, theo dõi tiến độ và thời hạn tức thời
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreateClick}
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 border-none text-white font-bold shadow-md shadow-rose-200 flex items-center gap-2"
+            >
+              Thêm việc mới
+            </Button>
+          </div>
+
+          {/* Hàng 2: Thống kê */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-1 pt-6 border-t border-gray-100">
+            <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Tổng công việc
+                </span>
+                <span className="text-2xl font-black text-gray-800 mt-1 block">
+                  {stats.total}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 text-base">
+                <CalendarOutlined />
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider block">
+                  Khẩn cấp
+                </span>
+                <span className="text-2xl font-black text-rose-600 mt-1 block">
+                  {stats.urgent}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 text-base">
+                <FireOutlined />
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider block">
+                  Đang làm
+                </span>
+                <span className="text-2xl font-black text-amber-600 mt-1 block">
+                  {stats.inProgress}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 text-base">
+                <SyncOutlined spin={stats.inProgress > 0} />
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">
+                  Đã hoàn thành
+                </span>
+                <span className="text-2xl font-black text-emerald-600 mt-1 block">
+                  {stats.completed}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-base">
+                <CheckCircleFilled className="text-emerald-500 text-sm shrink-0" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Main Table */}
-        <div className="p-2">
-          <Table<UrgentTask>
-            rowKey="id"
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={sortedAndFilteredTasks}
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showTotal: (total) => `Tổng cộng ${total} công việc`,
-              className: "pr-4",
-            }}
-            rowClassName={(record) =>
-              record.status === "COMPLETED"
-                ? "bg-gray-50/60 transition-all hover:bg-gray-100/50"
-                : "transition-all hover:bg-rose-50/20"
-            }
-          />
-        </div>
-      </div>
+        {/* Filter + Table: Chung 1 Card */}
+        <div className="bg-white rounded-2xl mt-4 border border-gray-100 shadow-sm overflow-hidden">
+          {/* Filter Bar */}
+          <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-3 border-b border-gray-100">
+            {/* Tìm kiếm bên trái */}
+            <Input
+              prefix={<SearchOutlined className="text-gray-400" />}
+              placeholder="Tìm kiếm công việc..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              className="w-full md:w-72 h-10 rounded-xl border-gray-200 hover:border-rose-400 focus:border-rose-400"
+            />
 
+            {/* Bộ lọc bên phải: nằm ngang */}
+            <div className="flex flex-row flex-nowrap items-center gap-3 w-full md:w-auto">
+              <Select
+                value={filterPriority}
+                onChange={setFilterPriority}
+                className="w-36 h-10 shrink-0"
+                options={[
+                  { value: "ALL", label: "Tất cả mức độ" },
+                  { value: "URGENT", label: "🔥 Khẩn cấp" },
+                  { value: "HIGH", label: "⚡ Cao" },
+                  { value: "MEDIUM", label: "⭐ Trung bình" },
+                  { value: "LOW", label: "🌱 Thấp" },
+                ]}
+              />
+
+              <Select
+                value={filterStatus}
+                onChange={setFilterStatus}
+                className="w-40 h-10 shrink-0"
+                options={[
+                  { value: "ALL", label: "Tất cả trạng thái" },
+                  { value: "PENDING", label: "— Chưa làm" },
+                  { value: "IN_PROGRESS", label: "🟡 Đang làm" },
+                  { value: "COMPLETED", label: "✅ Hoàn thành" },
+                ]}
+              />
+
+              {/* Xóa hàng loạt */}
+              {selectedRowKeys.length > 0 && (
+                <div className="flex items-center gap-3 bg-rose-50/70 border border-rose-200 px-4 py-2 rounded-xl animate-fadeIn shrink-0">
+                  <span className="text-xs font-bold text-rose-700 whitespace-nowrap">
+                    Đã chọn <span className="underline">{selectedRowKeys.length}</span> công việc
+                  </span>
+
+                  <Popconfirm
+                    title={`Xóa tất cả ${selectedRowKeys.length} công việc đã chọn?`}
+                    description="Các công việc này sẽ bị xóa hoàn toàn khỏi cơ sở dữ liệu."
+                    onConfirm={handleDeleteBatch}
+                    okText="Xóa tất cả"
+                    cancelText="Hủy"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Button
+                      type="primary"
+                      danger
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      className="rounded-lg font-bold shadow-sm"
+                    >
+                      Xóa đã chọn
+                    </Button>
+                  </Popconfirm>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Main Table */}
+          <div className="p-2">
+            <Table<UrgentTask>
+              rowKey="id"
+              rowSelection={rowSelection}
+              columns={columns}
+              dataSource={sortedAndFilteredTasks}
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showTotal: (total) => `Tổng cộng ${total} công việc`,
+                className: "pr-4",
+              }}
+              rowClassName={(record) =>
+                record.status === "COMPLETED"
+                  ? "bg-gray-50/60 transition-all hover:bg-gray-100/50"
+                  : "transition-all hover:bg-rose-50/20"
+              }
+            />
+          </div>
+        </div>
+
+      </Card>
 
       {/* Create / Edit Modal */}
       <Modal

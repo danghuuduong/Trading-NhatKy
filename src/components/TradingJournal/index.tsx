@@ -1556,86 +1556,89 @@ export default function TradingJournal() {
         </div>
 
         {/* TABS: JOURNALS & CONDITIONS */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          size="large"
-          style={{
-            "--tab-active-color": "#06b6d4",
-          } as React.CSSProperties}
-          tabBarStyle={{
-            marginBottom: 24,
-            borderBottom: "2px solid #f0f0f0",
-          }}
-          items={[
-            {
-              key: "journals",
-              label: (
-                <span className="flex items-center gap-2 font-semibold px-1">
-                  <InfoCircleOutlined />
-                  Lịch sử Nhật ký Giao dịch
-                </span>
-              ),
-              children: (
-                <div>
-                  {loadingJournals ? (
-                    <div className="py-12 flex justify-center"><Spin indicator={antIcon} /></div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table
-                        columns={journalColumns}
-                        dataSource={journals}
-                        rowKey="id"
-                        pagination={{ pageSize: 5 }}
-                        locale={{
-                          emptyText: (
-                            <Empty
-                              image={Empty.PRESENTED_IMAGE_SIMPLE}
-                              description={<span className="text-gray-400 text-sm">Chưa có nhật ký nào. Nhấn <b>Tạo Nhật Ký</b>!</span>}
-                            />
-                          ),
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: "conditions",
-              label: (
-                <span className="flex items-center gap-2 font-semibold px-1">
-                  <UnorderedListOutlined />
-                  Danh sách Điều kiện
-                </span>
-              ),
-              children: (
-                <div>
-                  {loadingConditions ? (
-                    <div className="py-12 flex justify-center"><Spin indicator={antIcon} /></div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table
-                        columns={conditionColumns}
-                        dataSource={conditions}
-                        rowKey="id"
-                        pagination={false}
-                        locale={{
-                          emptyText: (
-                            <Empty
-                              image={Empty.PRESENTED_IMAGE_SIMPLE}
-                              description={<span className="text-gray-400 text-sm">Chưa có điều kiện nào. Nhấn <b>Tạo Điều Kiện</b>!</span>}
-                            />
-                          ),
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ),
-            },
-          ]}
-        />
+        <div className="bg-white rounded-2xl mt-6 border border-gray-100 shadow-sm overflow-hidden px-2">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            size="large"
+            style={{
+              "--tab-active-color": "#06b6d4",
+            } as React.CSSProperties}
+            tabBarStyle={{
+              marginBottom: 24,
+              borderBottom: "2px solid #f0f0f0",
+            }}
+            items={[
+              {
+                key: "journals",
+                label: (
+                  <span className="flex items-center gap-2 font-semibold px-1">
+                    <InfoCircleOutlined />
+                    Lịch sử Nhật ký Giao dịch
+                  </span>
+                ),
+                children: (
+                  <div>
+                    {loadingJournals ? (
+                      <div className="py-12 flex justify-center"><Spin indicator={antIcon} /></div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table
+                          columns={journalColumns}
+                          dataSource={journals}
+                          rowKey="id"
+                          pagination={{ pageSize: 5 }}
+                          locale={{
+                            emptyText: (
+                              <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={<span className="text-gray-400 text-sm">Chưa có nhật ký nào. Nhấn <b>Tạo Nhật Ký</b>!</span>}
+                              />
+                            ),
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                key: "conditions",
+                label: (
+                  <span className="flex items-center gap-2 font-semibold px-1">
+                    <UnorderedListOutlined />
+                    Danh sách Điều kiện
+                  </span>
+                ),
+                children: (
+                  <div>
+                    {loadingConditions ? (
+                      <div className="py-12 flex justify-center"><Spin indicator={antIcon} /></div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table
+                          columns={conditionColumns}
+                          dataSource={conditions}
+                          rowKey="id"
+                          pagination={false}
+                          locale={{
+                            emptyText: (
+                              <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={<span className="text-gray-400 text-sm">Chưa có điều kiện nào. Nhấn <b>Tạo Điều Kiện</b>!</span>}
+                              />
+                            ),
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
+
       </Card>
 
       {/* ===== CARD 2: THỐNG KÊ HIỆU SUẤT THẮNG/THUA ===== */}
