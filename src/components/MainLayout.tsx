@@ -10,6 +10,7 @@ import {
   FireOutlined,
 } from "@ant-design/icons";
 import { usePathname, useRouter } from "next/navigation";
+import VividFireIcon from "@/components/UrgentTasks/VividFireIcon";
 
 const { Sider, Content } = Layout;
 
@@ -30,7 +31,8 @@ export const MENU_ITEMS = [
   },
   {
     key: "/urgent-tasks",
-    icon: <FireOutlined className="text-lg text-rose-500" />,
+    icon:
+      <VividFireIcon size="sm" />,
     label: "Việc cần làm gấp",
   },
 ];

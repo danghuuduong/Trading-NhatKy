@@ -32,6 +32,7 @@ import {
   SyncOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import VividFireIcon from "./VividFireIcon";
 import {
   UrgentTask,
   PriorityLevel,
@@ -343,7 +344,7 @@ export default function UrgentTasks() {
       render: (priority: PriorityLevel, record: UrgentTask) => {
         const selectBorderClass =
           priority === "URGENT"
-            ? "[&_.ant-select-selector]:!bg-rose-50/70 [&_.ant-select-selector]:!border-rose-300 [&_.ant-select-selector]:!rounded-xl shadow-sm shadow-rose-100"
+            ? "[&_.ant-select-selector]:!bg-gradient-to-r [&_.ant-select-selector]:!from-rose-50/90 [&_.ant-select-selector]:!via-orange-50/80 [&_.ant-select-selector]:!to-rose-50/90 [&_.ant-select-selector]:!border-rose-400 [&_.ant-select-selector]:!rounded-xl animate-fire-glow-pulse [&_.ant-select-selector]:!overflow-visible [&_.ant-select-selection-item]:!overflow-visible"
             : priority === "HIGH"
               ? "[&_.ant-select-selector]:!bg-amber-50/70 [&_.ant-select-selector]:!border-amber-300 [&_.ant-select-selector]:!rounded-xl shadow-sm shadow-amber-100"
               : priority === "MEDIUM"
@@ -362,9 +363,12 @@ export default function UrgentTasks() {
                 {
                   value: "URGENT",
                   label: (
-                    <div className="flex items-center gap-2 py-0.5 font-bold text-rose-600">
-                      <FireOutlined className="text-rose-500 animate-pulse text-sm shrink-0" />
-                      <span>Khẩn cấp</span>
+
+                    <div className="flex items-center gap-2 py-0.5 font-black text-rose-600">
+                      <VividFireIcon size="md" />
+                      <span className="bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 bg-clip-text text-transparent font-black tracking-wide">
+                        Khẩn cấp
+                      </span>
                     </div>
                   ),
                 },
@@ -518,7 +522,7 @@ export default function UrgentTasks() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center shadow-md shadow-rose-200 text-white text-lg">
-                <FireOutlined />
+                <VividFireIcon size="md" />
               </div>
               <div>
                 <h1 className="text-xl font-black text-gray-800 tracking-tight m-0">
@@ -565,8 +569,8 @@ export default function UrgentTasks() {
                   {stats.urgent}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 text-base">
-                <FireOutlined />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-100 flex items-center justify-center shadow-sm">
+                <VividFireIcon size="md" />
               </div>
             </div>
 
@@ -622,7 +626,15 @@ export default function UrgentTasks() {
                 className="w-36 h-10 shrink-0"
                 options={[
                   { value: "ALL", label: "Tất cả mức độ" },
-                  { value: "URGENT", label: "🔥 Khẩn cấp" },
+                  {
+                    value: "URGENT",
+                    label: (
+                      <div className="flex items-center gap-1.5 font-bold text-rose-600">
+                        <VividFireIcon size="xs" />
+                        <span>Khẩn cấp</span>
+                      </div>
+                    ),
+                  },
                   { value: "HIGH", label: "⚡ Cao" },
                   { value: "MEDIUM", label: "⭐ Trung bình" },
                   { value: "LOW", label: "🌱 Thấp" },
@@ -687,7 +699,9 @@ export default function UrgentTasks() {
               rowClassName={(record) =>
                 record.status === "COMPLETED"
                   ? "bg-gray-50/60 transition-all hover:bg-gray-100/50"
-                  : "transition-all hover:bg-rose-50/20"
+                  : record.priority === "URGENT"
+                    ? "bg-gradient-to-r from-rose-50/40 via-orange-50/15 to-transparent transition-all hover:from-rose-50/60 font-medium"
+                    : "transition-all hover:bg-rose-50/20"
               }
             />
           </div>
@@ -754,7 +768,15 @@ export default function UrgentTasks() {
               <Select
                 className="w-full h-11"
                 options={[
-                  { value: "URGENT", label: "🔥 Khẩn cấp (Làm ngay)" },
+                  {
+                    value: "URGENT",
+                    label: (
+                      <div className="flex items-center gap-2 font-bold text-rose-600">
+                        <VividFireIcon size="sm" />
+                        <span>Khẩn cấp (Làm ngay)</span>
+                      </div>
+                    ),
+                  },
                   { value: "HIGH", label: "⚡ Cao" },
                   { value: "MEDIUM", label: "⭐ Trung bình" },
                   { value: "LOW", label: "🌱 Thấp" },
