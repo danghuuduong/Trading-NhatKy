@@ -358,7 +358,7 @@ export default function UrgentTasks() {
               onChange={(newVal) => handleQuickPriorityChange(record, newVal)}
               className={`w-full text-xs font-bold ${selectBorderClass}`}
               popupMatchSelectWidth={false}
-              popupClassName="rounded-xl shadow-xl p-1"
+              classNames={{ popup: { root: "rounded-xl shadow-xl p-1" } }}
               options={[
                 {
                   value: "URGENT",
@@ -425,7 +425,7 @@ export default function UrgentTasks() {
               onChange={(newVal) => handleQuickStatusChange(record, newVal)}
               className={`w-full text-xs font-bold ${selectBorderClass}`}
               popupMatchSelectWidth={false}
-              popupClassName="rounded-xl shadow-xl p-1"
+              classNames={{ popup: { root: "rounded-xl shadow-xl p-1" } }}
               options={[
                 {
                   value: "PENDING",

@@ -396,7 +396,7 @@ export default function TradingMethods() {
               placeholder="Chọn chỉ báo sẽ sài trong phương pháp này..."
               className="w-full rounded-xl"
               style={{ width: "100%" }}
-              popupClassName="rounded-xl"
+              classNames={{ popup: { root: "rounded-xl" } }}
               options={conditions.map((c) => ({
                 label: c.name,
                 value: c.id,
