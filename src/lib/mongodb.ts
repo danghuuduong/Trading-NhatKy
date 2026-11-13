@@ -1,4 +1,12 @@
+import dns from "dns";
 import { MongoClient } from "mongodb";
+
+try {
+  // Ép phân giải qua Google/Cloudflare DNS để tránh lỗi querySrv ECONNREFUSED của mạng/ISP
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch {
+  // Bỏ qua nếu môi trường không hỗ trợ
+}
 
 const uri = process.env.MONGODB_URI;
 
