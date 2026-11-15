@@ -156,20 +156,28 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <Layout className="flex-1 flex flex-col min-w-0">
         {/* ── Mobile Header ── */}
-        <Header className="md:hidden flex items-center justify-between bg-white border-b border-gray-100 shadow-sm px-4 h-14 sticky top-0 z-30">
+        <Header
+          className="md:hidden flex items-center justify-between shadow-md px-4 h-14 sticky top-0 z-30 border-b border-cyan-400/30"
+          style={{
+            background: "linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)",
+            padding: "0 16px",
+            height: "56px",
+            lineHeight: "56px",
+          }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden p-1 border border-gray-100">
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden p-1">
               <img src="/logoChinh.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="font-black text-base tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+            <span className="font-black text-base tracking-wider text-white drop-shadow-sm">
               NHẬT KÝ
             </span>
           </div>
           <Button
             type="text"
-            icon={<MenuOutlined className="text-gray-600 text-lg" />}
+            icon={<MenuOutlined className="text-white text-xl" />}
             onClick={() => setMobileDrawerOpen(true)}
-            className="flex items-center justify-center h-9 w-9 rounded-lg hover:bg-gray-100"
+            className="flex items-center justify-center h-10 w-10 rounded-xl bg-white/20 hover:bg-white/30 active:bg-white/40 border border-white/30 text-white shadow-sm transition-all"
           />
         </Header>
 
