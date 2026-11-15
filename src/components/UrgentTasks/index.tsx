@@ -504,10 +504,10 @@ export default function UrgentTasks() {
   return (
     <div className="space-y-6">
       <Card
-        className="rounded-2xl"
+        className="rounded-2xl overflow-hidden"
         styles={{
           body: {
-            padding: 24,
+            padding: 0,
           },
         }}
         style={{
@@ -517,7 +517,7 @@ export default function UrgentTasks() {
         }}
       >
         {/* Header & Page Title */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm">
           {/* Hàng 1: Tiêu đề + nút thêm */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-2.5">
@@ -618,12 +618,12 @@ export default function UrgentTasks() {
               className="w-full md:w-72 h-10 rounded-xl border-gray-200 hover:border-rose-400 focus:border-rose-400"
             />
 
-            {/* Bộ lọc bên phải: nằm ngang */}
-            <div className="flex flex-row flex-nowrap items-center gap-3 w-full md:w-auto">
+            {/* Bộ lọc bên phải: linh hoạt mobile */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
               <Select
                 value={filterPriority}
                 onChange={setFilterPriority}
-                className="w-36 h-10 shrink-0"
+                className="flex-1 sm:flex-none sm:w-36 h-10 shrink-0 min-w-[130px]"
                 options={[
                   { value: "ALL", label: "Tất cả mức độ" },
                   {
@@ -644,7 +644,7 @@ export default function UrgentTasks() {
               <Select
                 value={filterStatus}
                 onChange={setFilterStatus}
-                className="w-40 h-10 shrink-0"
+                className="flex-1 sm:flex-none sm:w-40 h-10 shrink-0 min-w-[140px]"
                 options={[
                   { value: "ALL", label: "Tất cả trạng thái" },
                   { value: "PENDING", label: "— Chưa làm" },
@@ -684,13 +684,14 @@ export default function UrgentTasks() {
           </div>
 
           {/* Main Table */}
-          <div className="p-2">
+          <div className="p-2 overflow-x-auto">
             <Table<UrgentTask>
               rowKey="id"
               rowSelection={rowSelection}
               columns={columns}
               dataSource={sortedAndFilteredTasks}
               loading={loading}
+              scroll={{ x: "max-content" }}
               pagination={{
                 pageSize: 10,
                 showTotal: (total) => `Tổng cộng ${total} công việc`,
@@ -724,7 +725,7 @@ export default function UrgentTasks() {
         footer={null}
         destroyOnHidden
         className="rounded-2xl overflow-hidden"
-        width={560}
+        width="min(560px, 95vw)"
       >
         <Form
           form={form}

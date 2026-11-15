@@ -620,6 +620,7 @@ export default function AccountManagement() {
           dataSource={list.map((t, idx) => ({ ...t, key: t.toolName || idx }))}
           pagination={false}
           size="small"
+          scroll={{ x: "max-content" }}
           locale={{ emptyText: "Chưa có thông số tool nào được ghi nhận" }}
         />
       </div>
@@ -668,7 +669,7 @@ export default function AccountManagement() {
 
 
       {/* Main Table Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         <Table
           columns={columns}
           dataSource={accounts.map((acc) => ({ ...acc, key: acc.id }))}
@@ -681,6 +682,7 @@ export default function AccountManagement() {
             pageSize: 10,
             showTotal: (total) => `Tổng số ${total} tài khoản`,
           }}
+          scroll={{ x: "max-content" }}
           className="account-custom-table"
         />
       </div>
@@ -699,6 +701,7 @@ export default function AccountManagement() {
         okText={editingAccount ? "Lưu thay đổi" : "Tạo tài khoản"}
         cancelText="Hủy"
         destroyOnHidden
+        width="min(520px, 95vw)"
       >
         <Form
           form={form}

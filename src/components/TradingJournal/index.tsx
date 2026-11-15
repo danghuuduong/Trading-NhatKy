@@ -1587,6 +1587,7 @@ export default function TradingJournal() {
                           columns={journalColumns}
                           dataSource={journals}
                           rowKey="id"
+                          scroll={{ x: "max-content" }}
                           pagination={{ pageSize: 5 }}
                           locale={{
                             emptyText: (
@@ -1620,6 +1621,7 @@ export default function TradingJournal() {
                           columns={conditionColumns}
                           dataSource={conditions}
                           rowKey="id"
+                          scroll={{ x: "max-content" }}
                           pagination={false}
                           locale={{
                             emptyText: (
@@ -1765,10 +1767,10 @@ export default function TradingJournal() {
 
         return (
           <Card
-            className="rounded-2xl !mt-5"
+            className="rounded-2xl !mt-5 overflow-hidden"
             styles={{
               body: {
-                padding: 24,
+                padding: 0,
               },
             }}
             style={{
@@ -1779,7 +1781,7 @@ export default function TradingJournal() {
           >
             {/* ---- HEADER ---- */}
             <div
-              className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               style={{ background: "linear-gradient(135deg, #f0fdfa 0%, #ecfeff 50%, #f0f9ff 100%)", borderBottom: "1px solid #e0f7fa" }}
             >
               <div>
@@ -1815,7 +1817,7 @@ export default function TradingJournal() {
                 </p>
               </div>
             ) : (
-              <div className="p-6 space-y-6">
+              <div className="p-3 sm:p-5 md:p-6 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
                   {/* Column 1: Donut Chart (Winrate 3/12) */}
                   <Card
@@ -2117,7 +2119,7 @@ export default function TradingJournal() {
         onCancel={() => { condForm.resetFields(); setNewSubConds([]); setIsCondOpen(false); }}
         footer={null}
         centered
-        width={480}
+        width="min(480px, 95vw)"
         styles={{ body: { paddingTop: 16, maxHeight: "80vh", overflowY: "auto" } }}
       >
         <Form
@@ -2171,7 +2173,7 @@ export default function TradingJournal() {
         onCancel={() => { editCondForm.resetFields(); setEditSubConds([]); setIsEditCondOpen(false); setEditingCondition(null); }}
         footer={null}
         centered
-        width={480}
+        width="min(480px, 95vw)"
         styles={{ body: { paddingTop: 16, maxHeight: "80vh", overflowY: "auto" } }}
       >
         <Form form={editCondForm} layout="vertical" onFinish={handleUpdateCondition}>
@@ -2220,13 +2222,13 @@ export default function TradingJournal() {
         onCancel={() => setIsJournalOpen(false)}
         footer={null}
         centered
-        width={860}
-        styles={{ body: { paddingTop: 16, maxHeight: "86vh", overflowY: "hidden", padding: 0 } }}
+        width="min(860px, 95vw)"
+        styles={{ body: { paddingTop: 16, maxHeight: "86vh", overflowY: "auto", padding: 0 } }}
       >
         <Form form={journalForm} layout="vertical" onFinish={handleSaveJournal} initialValues={{ direction: "BUY" }}>
-          <div className="flex" style={{ minHeight: 480 }}>
+          <div className="flex flex-col md:flex-row" style={{ minHeight: 480 }}>
             {/* ===== LEFT: FORM CONTENT ===== */}
-            <div className="flex-1 overflow-y-auto" style={{ maxHeight: "82vh", padding: "20px 20px 20px 24px" }}>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6" style={{ maxHeight: "82vh" }}>
               {/* Symbol + Direction row */}
               <div className="flex gap-3 items-end">
                 <Form.Item
@@ -2511,8 +2513,8 @@ export default function TradingJournal() {
 
               return (
                 <div
-                  className={`w-64 flex-shrink-0 border-l border-gray-100 flex flex-col transition-all duration-500 ${hasCondition ? bgClass : "bg-gray-50/60"}`}
-                  style={{ padding: "24px 20px", position: "sticky", top: 0 }}
+                  className={`w-full md:w-64 flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-100 flex flex-col transition-all duration-500 ${hasCondition ? bgClass : "bg-gray-50/60"}`}
+                  style={{ padding: "24px 20px" }}
                 >
                   {/* Header */}
                   <div className="mb-4">
@@ -2604,14 +2606,14 @@ export default function TradingJournal() {
         }}
         footer={null}
         centered
-        width={860}
-        styles={{ body: { paddingTop: 16, maxHeight: "86vh", overflowY: "hidden", padding: 0 } }}
+        width="min(860px, 95vw)"
+        styles={{ body: { paddingTop: 16, maxHeight: "86vh", overflowY: "auto", padding: 0 } }}
       >
         <Form form={editJournalForm} layout="vertical" onFinish={handleUpdateJournal}>
-          <div className="flex" style={{ minHeight: 480 }}>
+          <div className="flex flex-col md:flex-row" style={{ minHeight: 480 }}>
 
             {/* ===== LEFT: FORM CONTENT ===== */}
-            <div className="flex-1 overflow-y-auto" style={{ maxHeight: "82vh", padding: "20px 20px 20px 24px" }}>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6" style={{ maxHeight: "82vh" }}>
 
               {/* Symbol + Direction row */}
               <div className="flex gap-3 items-end mb-4">
@@ -2932,8 +2934,8 @@ export default function TradingJournal() {
 
               return (
                 <div
-                  className={`w-64 flex-shrink-0 border-l border-gray-100 flex flex-col transition-all duration-500 ${hasCondition ? bgClass : "bg-gray-50/60"}`}
-                  style={{ padding: "24px 20px", position: "sticky", top: 0 }}
+                  className={`w-full md:w-64 flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-100 flex flex-col transition-all duration-500 ${hasCondition ? bgClass : "bg-gray-50/60"}`}
+                  style={{ padding: "24px 20px" }}
                 >
                   <div className="mb-4">
                     <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">📊 Nhận định & Lời khuyên</span>

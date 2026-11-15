@@ -356,7 +356,7 @@ export default function TradingMethods() {
         footer={null}
         destroyOnHidden
         className="rounded-2xl overflow-hidden"
-        width={600}
+        width="min(600px, 95vw)"
       >
         <Form
           form={form}
