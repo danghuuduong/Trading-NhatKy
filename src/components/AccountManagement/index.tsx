@@ -267,6 +267,9 @@ export default function AccountManagement() {
             chuoiThuaLienTiepCaoNhat: 0,
             hoaHongHienTai: 0,
             tongHoaHongDaThu: 0,
+            KhoiluongVaoLenh: 0,
+            PhiGiaodich: 0,
+            tut: 0,
           }
           : t
       );
@@ -451,23 +454,18 @@ export default function AccountManagement() {
         ),
       },
       {
-        title: "Thắng",
-        dataIndex: "win",
-        key: "win",
-        render: (win: number) => (
-          <Tag color="success" className="font-bold px-2 py-0.5 text-xs">
-            {win ?? 0}
-          </Tag>
-        ),
-      },
-      {
-        title: "Thua",
-        dataIndex: "Thua",
-        key: "Thua",
-        render: (thua: number) => (
-          <Tag color="error" className="font-bold px-2 py-0.5 text-xs">
-            {thua ?? 0}
-          </Tag>
+        title: "Thắng / Thua",
+        key: "win_loss",
+        render: (_: any, t: ToolStat) => (
+          <div className="flex items-center gap-1 font-bold text-xs">
+            <Tag color="success" className="font-bold px-1.5 py-0.5 text-xs m-0">
+              {t.win ?? 0}
+            </Tag>
+            <span className="text-gray-400 font-semibold">/</span>
+            <Tag color="error" className="font-bold px-1.5 py-0.5 text-xs m-0">
+              {t.Thua ?? 0}
+            </Tag>
+          </div>
         ),
       },
       {
@@ -503,32 +501,66 @@ export default function AccountManagement() {
         },
       },
       {
-        title: "Thắng Max",
-        key: "chuoiThangLienTiepCaoNhat",
-        render: (_: any, t: ToolStat) => {
-          const max = t.chuoiThangLienTiepCaoNhat ?? 0;
-          const current = t.currentWinStreak ?? 0;
+        title: "Khối lượng",
+        dataIndex: "KhoiluongVaoLenh",
+        key: "KhoiluongVaoLenh",
+        render: (val: number) => {
+          const num = Number(val) || 0;
           return (
-            <Tooltip title={`Chuỗi thắng hiện tại: ${current} ván`}>
-              <Tag color="orange" className="font-bold px-2 py-0.5 text-xs">
-                {max} ❄️
-              </Tag>
-            </Tooltip>
+            <span className="font-semibold text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+              {num.toLocaleString()} K
+            </span>
           );
         },
       },
       {
-        title: "Thua Max",
-        key: "chuoiThuaLienTiepCaoNhat",
-        render: (_: any, t: ToolStat) => {
-          const max = t.chuoiThuaLienTiepCaoNhat ?? 0;
-          const current = t.currentLossStreak ?? 0;
+        title: "Phí",
+        dataIndex: "PhiGiaodich",
+        key: "PhiGiaodich",
+        render: (val: number) => {
+          const num = Number(val) || 0;
           return (
-            <Tooltip title={`Chuỗi thua hiện tại: ${current} ván`}>
-              <Tag color="purple" className="font-bold px-2 py-0.5 text-xs">
-                {max} 🔥
-              </Tag>
-            </Tooltip>
+            <span className="font-semibold text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              {num.toLocaleString()} K
+            </span>
+          );
+        },
+      },
+      {
+        title: "Tụt",
+        dataIndex: "tut",
+        key: "tut",
+        render: (val: number) => {
+          const num = Number(val) || 0;
+          return (
+            <Tag color={num > 0 ? "volcano" : "default"} className="font-bold px-2 py-0.5 text-xs m-0">
+              {num > 0 ? `-${num.toLocaleString()}` : "0"} K
+            </Tag>
+          );
+        },
+      },
+      {
+        title: "Thắng / Thua Max",
+        key: "max_streaks",
+        render: (_: any, t: ToolStat) => {
+          const maxWin = t.chuoiThangLienTiepCaoNhat ?? 0;
+          const currentWin = t.currentWinStreak ?? 0;
+          const maxLoss = t.chuoiThuaLienTiepCaoNhat ?? 0;
+          const currentLoss = t.currentLossStreak ?? 0;
+          return (
+            <div className="flex items-center gap-1 font-bold text-xs">
+              <Tooltip title={`Chuỗi thắng hiện tại: ${currentWin} ván`}>
+                <Tag color="orange" className="font-bold px-1.5 py-0.5 text-xs m-0">
+                  {maxWin} ❄️
+                </Tag>
+              </Tooltip>
+              <span className="text-gray-400 font-semibold">/</span>
+              <Tooltip title={`Chuỗi thua hiện tại: ${currentLoss} ván`}>
+                <Tag color="purple" className="font-bold px-1.5 py-0.5 text-xs m-0">
+                  {maxLoss} 🔥
+                </Tag>
+              </Tooltip>
+            </div>
           );
         },
       },

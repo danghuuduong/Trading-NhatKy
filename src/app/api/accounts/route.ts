@@ -15,7 +15,9 @@ export async function GET() {
 
     const mapped = accounts.map((item) => {
       const rawTools = Array.isArray(item.tools) ? item.tools : [];
+      // Trả toàn bộ dữ liệu của từng tool con, giữ nguyên mọi trường hiện có và tương lai
       const tools = rawTools.map((t: any) => ({
+        ...t,
         toolName: String(t.toolName || "01"),
         win: Number(t.win) || 0,
         Thua: Number(t.Thua) || 0,
@@ -28,7 +30,9 @@ export async function GET() {
         tongHoaHongDaThu: Number(t.tongHoaHongDaThu) || 0,
       }));
 
+      // Trả toàn bộ dữ liệu của account, không lọc bỏ bất kỳ trường nào
       return {
+        ...item,
         id: item._id.toString(),
         name: item.name || item.taiKhoan,
         taiKhoan: item.taiKhoan,
@@ -36,8 +40,6 @@ export async function GET() {
         phanTramChiuThue: item.phanTramChiuThue !== undefined ? Number(item.phanTramChiuThue) : 50,
         ngayThamGia: item.ngayThamGia || item.createdAt || new Date().toISOString(),
         tools,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
       };
     });
 

@@ -38,6 +38,10 @@ export async function POST(request: Request) {
 
     const isWin = result === "win";
     const isThua = result === "thua";
+    const kl = Math.round(Number(body.khoiLuong ?? body.KhoiluongVaoLenh ?? 0) * 100) / 100;
+    const phiGD = Math.round(Number(body.phi ?? body.PhiGiaodich ?? 0) * 100) / 100;
+    const hasTut = body.tut !== undefined && body.tut !== null;
+    const tutVal = hasTut ? Math.round(Number(body.tut) * 100) / 100 : 0;
 
     if (!existingTool) {
       // 2a. Chưa có toolName này -> push phần tử mới vào mảng
@@ -48,6 +52,9 @@ export async function POST(request: Request) {
         win: curWin,
         Thua: curLoss,
         profit: delta,
+        KhoiluongVaoLenh: kl,
+        PhiGiaodich: phiGD,
+        ...(hasTut ? { tut: tutVal } : {}),
         currentWinStreak: curWin,
         currentLossStreak: curLoss,
         chuoiThangLienTiepCaoNhat: curWin,
@@ -87,6 +94,8 @@ export async function POST(request: Request) {
             "tools.$[elem].win": isWin ? 1 : 0,
             "tools.$[elem].Thua": isThua ? 1 : 0,
             "tools.$[elem].profit": delta,
+            "tools.$[elem].KhoiluongVaoLenh": kl,
+            "tools.$[elem].PhiGiaodich": phiGD,
             "tools.$[elem].hoaHongHienTai": hoaHongDelta,
           },
           $set: {
@@ -94,6 +103,7 @@ export async function POST(request: Request) {
             "tools.$[elem].currentLossStreak": curLoss,
             "tools.$[elem].chuoiThangLienTiepCaoNhat": maxWin,
             "tools.$[elem].chuoiThuaLienTiepCaoNhat": maxLoss,
+            ...(hasTut ? { "tools.$[elem].tut": tutVal } : {}),
             updatedAt: new Date(),
           },
         },
