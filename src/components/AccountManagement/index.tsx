@@ -19,7 +19,6 @@ import {
   UserAddOutlined,
   DeleteOutlined,
   EditOutlined,
-  ReloadOutlined,
   UserOutlined,
   KeyOutlined,
   CheckCircleOutlined,
@@ -29,6 +28,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { AccountItem, AccountFormValues, ToolStat } from "./types";
+import AnimatedProfitCell, { formatMoney } from "./AnimatedProfitCell";
 
 const PHAN_TRAM_OPTIONS = [
   { label: "0%", value: 0 },
@@ -55,22 +55,33 @@ export default function AccountManagement() {
   const [form] = Form.useForm<AccountFormValues>();
 
   // Fetch accounts
-  const fetchAccounts = async () => {
-    setLoading(true);
+  const fetchAccounts = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const res = await fetch("/api/accounts");
       if (!res.ok) throw new Error("Không thể tải danh sách tài khoản");
       const data = await res.json();
       setAccounts(data);
     } catch (error: any) {
-      message.error("Lỗi: " + error.message);
+      if (!isSilent) {
+        message.error("Lỗi: " + error.message);
+      } else {
+        console.error("Lỗi tự động tải danh sách tài khoản:", error);
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAccounts();
+
+    // Tự động tải lại mỗi 20 giây khi đang đứng ở trang này
+    const interval = setInterval(() => {
+      fetchAccounts(true);
+    }, 9000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Tính toán metrics cho từng account
@@ -293,19 +304,36 @@ export default function AccountManagement() {
       title: "Tài khoản",
       dataIndex: "taiKhoan",
       key: "taiKhoan",
-      width: 190,
+      width: 103,
       render: (taiKhoan: string, record: AccountItem) => (
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shadow-sm">
             <UserOutlined />
           </div>
           <div className="flex flex-col">
-            <span className="font-mono font-bold text-blue-700 bg-blue-50/80 px-2.5 py-0.5 rounded border border-blue-200/60 inline-block text-xs">
+            <span className="font-mono font-bold text-blue-700 bg-blue-50/80 px- py-0.5 rounded border border-blue-200/60 inline-block text-xs">
               {taiKhoan}
             </span>
           </div>
         </div>
       ),
+    },
+
+    // Cột 3: Tổng profit
+    {
+      title: "Tổng Lãi",
+      key: "tongProfit",
+      width: 150,
+      render: (_, record: AccountItem) => {
+        const { totalProfit } = getAccountMetrics(record);
+        return (
+          <AnimatedProfitCell
+            value={totalProfit}
+            showPlus
+            size="md"
+          />
+        );
+      },
     },
     // Cột 2: Ngày tham gia
     {
@@ -323,49 +351,30 @@ export default function AccountManagement() {
         );
       },
     },
-    // Cột 3: Tổng profit
-    {
-      title: "Tổng profit",
-      key: "tongProfit",
-      width: 160,
-      render: (_, record: AccountItem) => {
-        const { totalProfit } = getAccountMetrics(record);
-        const isPos = totalProfit >= 0;
-        return (
-          <span
-            className={`font-black text-sm px-2.5 py-1 rounded  inline-block ${isPos
-              ? "text-emerald-700  border-emerald-200"
-              : "text-rose-700  border-rose-200"
-              }`}
-          >
-            {isPos ? `+${totalProfit.toLocaleString()}` : totalProfit.toLocaleString()} K
-          </span>
-        );
-      },
-    },
     // Cột 4: Hoa hồng Đã thu
     {
-      title: "Hoa hồng Đã thu",
+      title: "Đã thu",
       key: "tongHoaHongDaThu",
       width: 170,
       render: (_, record: AccountItem) => {
         const { totalHoaHongDaThu } = getAccountMetrics(record);
         return (
-          <span className="font-bold text-green-700  px-2.5 py-1 rounded  text-sm inline-block">
-            +{totalHoaHongDaThu.toLocaleString()} K
+          <span className="font-bold text-green-700 px-2.5 py-1 rounded text-sm inline-block">
+            +{formatMoney(totalHoaHongDaThu).fullStr}
           </span>
         );
       },
     },
     // Cột 5: Hoa Hồng hiện tại + Nút [ĐÃ NHẬN]
     {
-      title: "Hoa Hồng hiện tại",
+      title: "Hoa Hồng",
       key: "hoaHongHienTai",
       width: 250,
       render: (_, record: AccountItem) => {
         const { totalHoaHongHienTai } = getAccountMetrics(record);
         const isPos = totalHoaHongHienTai >= 0;
         const hasCommission = totalHoaHongHienTai !== 0;
+        const formatted = formatMoney(totalHoaHongHienTai);
 
         return (
           <div className="flex items-center gap-2">
@@ -375,12 +384,12 @@ export default function AccountManagement() {
                 : "text-rose-700 bg-rose-50 border-rose-200"
                 }`}
             >
-              {isPos ? `+${totalHoaHongHienTai.toLocaleString()}` : totalHoaHongHienTai.toLocaleString()} K
+              {isPos ? `+${formatted.fullStr}` : `-${formatted.fullStr}`}
             </span>
 
             <Popconfirm
               title="Xác nhận thu hoa hồng?"
-              description={`Xác nhận đã nhận ${isPos ? `+${totalHoaHongHienTai}` : totalHoaHongHienTai}K hoa hồng từ tài khoản ${record.taiKhoan}?`}
+              description={`Xác nhận đã nhận ${isPos ? `+${formatted.fullStr}` : `-${formatted.fullStr}`} hoa hồng từ tài khoản ${record.taiKhoan}?`}
               onConfirm={() => handleSettleCommission(record.id, record.taiKhoan, totalHoaHongHienTai)}
               okText="Nhận"
               cancelText="Hủy"
@@ -442,51 +451,44 @@ export default function AccountManagement() {
   const expandedRowRender = (record: AccountItem) => {
     const list = record.tools || [];
 
-    const subColumns = [
+    const subColumns: TableProps<ToolStat>["columns"] = [
       {
         title: "Tên Tool",
         dataIndex: "toolName",
         key: "toolName",
+        width: 160,
         render: (toolName: string) => (
-          <span className="font-bold text-blue-600 font-mono text-sm bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
-            {toolName}
+          <span className="font-mono text-sm px-2 py-0.5">
+            {toolName.length > 13 ? toolName.slice(0, 13) + ".." : toolName}
           </span>
         ),
       },
       {
-        title: "Thắng / Thua",
-        key: "win_loss",
-        render: (_: any, t: ToolStat) => (
-          <div className="flex items-center gap-1 font-bold text-xs">
-            <Tag color="success" className="font-bold px-1.5 py-0.5 text-xs m-0">
-              {t.win ?? 0}
-            </Tag>
-            <span className="text-gray-400 font-semibold">/</span>
-            <Tag color="error" className="font-bold px-1.5 py-0.5 text-xs m-0">
-              {t.Thua ?? 0}
-            </Tag>
-          </div>
+        title: "Lãi",
+        dataIndex: "profit",
+        key: "profit",
+        align: "center",
+        render: (profit: number) => (
+          <AnimatedProfitCell
+            value={Number(profit) || 0}
+            showPlus
+            size="xs"
+          />
         ),
       },
       {
-        title: "Lợi nhuận",
-        dataIndex: "profit",
-        key: "profit",
-        render: (profit: number) => {
-          const num = Number(profit) || 0;
-          const isPos = num >= 0;
-          return (
-            <span
-              className={`font-black text-xs px-2 py-0.5 rounded ${isPos
-                ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
-                : "text-rose-700 bg-rose-50 border border-rose-200"
-                }`}
-            >
-              {isPos ? `+${num.toLocaleString()}` : num.toLocaleString()} K
-            </span>
-          );
-        },
+        title: "Win / Thua",
+        key: "win_loss",
+        align: "center",
+        render: (_: any, t: ToolStat) => (
+          <div className="flex items-center justify-center gap-1 text-xs text-center">
+            <span className="">{t.win ?? 0}</span>
+            <span className="text-gray-400 font-semibold">/</span>
+            <span className="">{t.Thua ?? 0}</span>
+          </div>
+        ),
       },
+
       {
         title: "%",
         key: "winrate",
@@ -494,34 +496,8 @@ export default function AccountManagement() {
           const total = (t.win || 0) + (t.Thua || 0);
           const rate = total > 0 ? (((t.win || 0) / total) * 100).toFixed(1) : "0.0";
           return (
-            <span className="font-semibold text-gray-700 text-xs">
+            <span className="text-gray-700 text-xs">
               {rate}%
-            </span>
-          );
-        },
-      },
-      {
-        title: "Khối lượng",
-        dataIndex: "KhoiluongVaoLenh",
-        key: "KhoiluongVaoLenh",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <span className="font-semibold text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-              {num.toLocaleString()} K
-            </span>
-          );
-        },
-      },
-      {
-        title: "Phí",
-        dataIndex: "PhiGiaodich",
-        key: "PhiGiaodich",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <span className="font-semibold text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-              {num.toLocaleString()} K
             </span>
           );
         },
@@ -534,13 +510,40 @@ export default function AccountManagement() {
           const num = Number(val) || 0;
           return (
             <Tag color={num > 0 ? "volcano" : "default"} className="font-bold px-2 py-0.5 text-xs m-0">
-              {num > 0 ? `-${num.toLocaleString()}` : "0"} K
+              {num > 0 ? `-${formatMoney(num).fullStr}` : "0 K"}
             </Tag>
           );
         },
       },
       {
-        title: "Thắng / Thua Max",
+        title: "Khối lượng",
+        dataIndex: "KhoiluongVaoLenh",
+        key: "KhoiluongVaoLenh",
+        render: (val: number) => {
+          const num = Number(val) || 0;
+          return (
+            <span className="text-xs px-2 py-0.5">
+              {formatMoney(num).fullStr}
+            </span>
+          );
+        },
+      },
+      {
+        title: "Phí GD",
+        dataIndex: "PhiGiaodich",
+        key: "PhiGiaodich",
+        render: (val: number) => {
+          const num = Number(val) || 0;
+          return (
+            <span className="font-semibold text-xs text-amber-700 px-2 py-0.5">
+              {formatMoney(num).fullStr}
+            </span>
+          );
+        },
+      },
+
+      {
+        title: "Chuỗi liên tiếp",
         key: "max_streaks",
         render: (_: any, t: ToolStat) => {
           const maxWin = t.chuoiThangLienTiepCaoNhat ?? 0;
@@ -548,51 +551,48 @@ export default function AccountManagement() {
           const maxLoss = t.chuoiThuaLienTiepCaoNhat ?? 0;
           const currentLoss = t.currentLossStreak ?? 0;
           return (
-            <div className="flex items-center gap-1 font-bold text-xs">
+            <div className="flex items-center gap-1 text-xs">
               <Tooltip title={`Chuỗi thắng hiện tại: ${currentWin} ván`}>
-                <Tag color="orange" className="font-bold px-1.5 py-0.5 text-xs m-0">
-                  {maxWin} ❄️
-                </Tag>
+                {maxWin} ❄️
               </Tooltip>
-              <span className="text-gray-400 font-semibold">/</span>
+              <span className="text-gray-400 ">/</span>
               <Tooltip title={`Chuỗi thua hiện tại: ${currentLoss} ván`}>
-                <Tag color="purple" className="font-bold px-1.5 py-0.5 text-xs m-0">
-                  {maxLoss} 🔥
-                </Tag>
+                {maxLoss} 🔥
               </Tooltip>
             </div>
           );
         },
       },
       // Cột MỚI 1: Hoa Hồng hiện tại của Tool
-      {
-        title: "Hoa Hồng hiện tại",
-        dataIndex: "hoaHongHienTai",
-        key: "hoaHongHienTai",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          const isPos = num >= 0;
-          return (
-            <Tag color={isPos ? "success" : "error"} className="font-bold px-2 py-0.5 text-xs">
-              {isPos ? `+${num}` : num} K
-            </Tag>
-          );
-        },
-      },
-      // Cột MỚI 2: Tổng hoa hồng đã thu của Tool
-      {
-        title: "Hoa hồng đã thu",
-        dataIndex: "tongHoaHongDaThu",
-        key: "tongHoaHongDaThu",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <Tag color="gold" className="font-bold px-2 py-0.5 text-xs">
-              +{num.toLocaleString()} K
-            </Tag>
-          );
-        },
-      },
+      // {
+      //   title: "Hoa Hồng",
+      //   dataIndex: "hoaHongHienTai",
+      //   key: "hoaHongHienTai",
+      //   render: (val: number) => {
+      //     const num = Number(val) || 0;
+      //     const isPos = num >= 0;
+      //     const formatted = formatMoney(num);
+      //     return (
+      //       <span className={`px-2 py-0.5 text-xs font-semibold ${isPos ? "text-green-600" : "text-red-600"}`}>
+      //         {isPos ? `+${num}` : num} K
+      //       </span>
+      //     );
+      //   },
+      // },
+      // // Cột MỚI 2: Tổng hoa hồng đã thu của Tool
+      // {
+      //   title: "Đã thu",
+      //   dataIndex: "tongHoaHongDaThu",
+      //   key: "tongHoaHongDaThu",
+      //   render: (val: number) => {
+      //     const num = Number(val) || 0;
+      //     return (
+      //       <span className="px-2 py-0.5 text-xs text-yellow-600 font-semibold">
+      //         +{formatMoney(num).fullStr}
+      //       </span>
+      //     );
+      //   },
+      // },
       {
         title: "Thao tác",
         key: "actions",
@@ -671,23 +671,15 @@ export default function AccountManagement() {
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-800 tracking-tight">
-              Quản lý Account & Tool Baccarat
+              Quản lý Tool
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Quản lý tài khoản, mật khẩu, theo dõi % hoa hồng phải chịu và thu hoa hồng theo chu kỳ
+              Quản lý tài khoản, mật khẩu, theo dõi %
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={fetchAccounts}
-            loading={loading}
-            className="hover:border-blue-500"
-          >
-            Tải lại
-          </Button>
           <Button
             type="primary"
             icon={<UserAddOutlined />}
@@ -793,14 +785,14 @@ export default function AccountManagement() {
                       }`}
                   >
                     {editingMetrics.totalHoaHongHienTai >= 0
-                      ? `+${editingMetrics.totalHoaHongHienTai}`
-                      : editingMetrics.totalHoaHongHienTai} K
+                      ? `+${formatMoney(editingMetrics.totalHoaHongHienTai).fullStr}`
+                      : `-${formatMoney(editingMetrics.totalHoaHongHienTai).fullStr}`}
                   </div>
                 </div>
                 <div className="bg-white p-2.5 rounded-lg border border-slate-100">
                   <div className="text-gray-500">Hoa hồng đã thu:</div>
                   <div className="font-black text-sm text-amber-600 mt-0.5">
-                    +{editingMetrics.totalHoaHongDaThu} K
+                    +{formatMoney(editingMetrics.totalHoaHongDaThu).fullStr}
                   </div>
                 </div>
               </div>

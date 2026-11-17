@@ -155,15 +155,19 @@ body {
 .quill-editor-wrapper .ql-snow .ql-picker.ql-size {
   width: 108px;
 }
+
 .quill-editor-wrapper .ql-snow .ql-picker.ql-size .ql-picker-label::before {
   content: 'Mặc định (14px)' !important;
 }
+
 .quill-editor-wrapper .ql-snow .ql-picker.ql-size .ql-picker-label[data-value]::before {
   content: attr(data-value) !important;
 }
+
 .quill-editor-wrapper .ql-snow .ql-picker.ql-size .ql-picker-item::before {
   content: attr(data-value) !important;
 }
+
 .quill-editor-wrapper .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before {
   content: 'Mặc định (14px)' !important;
 }
@@ -178,22 +182,27 @@ body {
     transform: scale(1) translateY(0) rotate(0deg);
     filter: drop-shadow(0 0 4px rgba(255, 77, 0, 0.8)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.6));
   }
+
   20% {
     transform: scale(1.08, 1.16) translateY(-2px) rotate(-3deg);
     filter: drop-shadow(0 0 6px rgba(255, 120, 0, 0.95)) drop-shadow(0 -3px 8px rgba(244, 63, 94, 0.75));
   }
+
   40% {
     transform: scale(0.96, 1.04) translateY(-1px) rotate(2deg);
     filter: drop-shadow(0 0 5px rgba(255, 77, 0, 0.85)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.65));
   }
+
   60% {
     transform: scale(1.05, 1.2) translateY(-3px) rotate(-1.5deg);
     filter: drop-shadow(0 0 7px rgba(255, 140, 0, 1)) drop-shadow(0 -4px 10px rgba(225, 29, 72, 0.85));
   }
+
   80% {
     transform: scale(0.98, 1.08) translateY(-1.5px) rotate(2.5deg);
     filter: drop-shadow(0 0 5px rgba(255, 77, 0, 0.85)) drop-shadow(0 -2px 7px rgba(255, 0, 64, 0.7));
   }
+
   100% {
     transform: scale(1) translateY(0) rotate(0deg);
     filter: drop-shadow(0 0 4px rgba(255, 77, 0, 0.8)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.6));
@@ -201,14 +210,18 @@ body {
 }
 
 @keyframes vivid-inner-flame {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1) translateY(0);
     opacity: 0.92;
   }
+
   30% {
     transform: scale(1.12, 1.25) translateY(-2px);
     opacity: 1;
   }
+
   65% {
     transform: scale(0.92, 1.05) translateY(-0.5px);
     opacity: 0.88;
@@ -220,14 +233,17 @@ body {
     transform: translateY(2px) scale(0.7);
     opacity: 0;
   }
+
   30% {
     opacity: 0.85;
     transform: translateY(-4px) scale(1.05);
   }
+
   70% {
     opacity: 0.6;
     transform: translateY(-9px) scale(0.9);
   }
+
   100% {
     transform: translateY(-15px) scale(0.4);
     opacity: 0;
@@ -239,12 +255,15 @@ body {
     transform: translate(0, 0) scale(0.9);
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   70% {
     opacity: 0.7;
   }
+
   100% {
     transform: translate(-5px, -15px) scale(0.2);
     opacity: 0;
@@ -256,12 +275,15 @@ body {
     transform: translate(0, 0) scale(1);
     opacity: 0;
   }
+
   15% {
     opacity: 1;
   }
+
   60% {
     opacity: 0.8;
   }
+
   100% {
     transform: translate(1px, -19px) scale(0.15);
     opacity: 0;
@@ -273,12 +295,15 @@ body {
     transform: translate(0, 0) scale(0.85);
     opacity: 0;
   }
+
   25% {
     opacity: 0.95;
   }
+
   75% {
     opacity: 0.6;
   }
+
   100% {
     transform: translate(6px, -14px) scale(0.2);
     opacity: 0;
@@ -290,9 +315,11 @@ body {
     transform: translate(0, 0) scale(0.7);
     opacity: 0;
   }
+
   30% {
     opacity: 0.9;
   }
+
   100% {
     transform: translate(-2px, -17px) scale(0.1);
     opacity: 0;
@@ -300,10 +327,13 @@ body {
 }
 
 @keyframes vivid-fire-glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px rgba(244, 63, 94, 0.22), inset 0 0 8px rgba(251, 146, 60, 0.12);
     border-color: rgba(251, 113, 133, 0.6);
   }
+
   50% {
     box-shadow: 0 0 18px rgba(244, 63, 94, 0.42), inset 0 0 12px rgba(251, 146, 60, 0.25);
     border-color: rgba(244, 63, 94, 0.95);
@@ -355,22 +385,27 @@ body {
     transform: scale(1) translateY(0) rotate(0deg);
     filter: drop-shadow(0 0 4px rgba(255, 77, 0, 0.8)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.6));
   }
+
   20% {
     transform: scale(1.08, 1.16) translateY(-2px) rotate(-3deg);
     filter: drop-shadow(0 0 6px rgba(255, 120, 0, 0.95)) drop-shadow(0 -3px 8px rgba(244, 63, 94, 0.75));
   }
+
   40% {
     transform: scale(0.96, 1.04) translateY(-1px) rotate(2deg);
     filter: drop-shadow(0 0 5px rgba(255, 77, 0, 0.85)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.65));
   }
+
   60% {
     transform: scale(1.05, 1.2) translateY(-3px) rotate(-1.5deg);
     filter: drop-shadow(0 0 7px rgba(255, 140, 0, 1)) drop-shadow(0 -4px 10px rgba(225, 29, 72, 0.85));
   }
+
   80% {
     transform: scale(0.98, 1.08) translateY(-1.5px) rotate(2.5deg);
     filter: drop-shadow(0 0 5px rgba(255, 77, 0, 0.85)) drop-shadow(0 -2px 7px rgba(255, 0, 64, 0.7));
   }
+
   100% {
     transform: scale(1) translateY(0) rotate(0deg);
     filter: drop-shadow(0 0 4px rgba(255, 77, 0, 0.8)) drop-shadow(0 -2px 6px rgba(255, 0, 64, 0.6));
@@ -378,14 +413,18 @@ body {
 }
 
 @keyframes vivid-inner-flame {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1) translateY(0);
     opacity: 0.92;
   }
+
   30% {
     transform: scale(1.12, 1.25) translateY(-2px);
     opacity: 1;
   }
+
   65% {
     transform: scale(0.92, 1.05) translateY(-0.5px);
     opacity: 0.88;
@@ -397,14 +436,17 @@ body {
     transform: translateY(2px) scale(0.7);
     opacity: 0;
   }
+
   30% {
     opacity: 0.85;
     transform: translateY(-4px) scale(1.05);
   }
+
   70% {
     opacity: 0.6;
     transform: translateY(-9px) scale(0.9);
   }
+
   100% {
     transform: translateY(-15px) scale(0.4);
     opacity: 0;
@@ -416,12 +458,15 @@ body {
     transform: translate(0, 0) scale(0.9);
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   70% {
     opacity: 0.7;
   }
+
   100% {
     transform: translate(-5px, -15px) scale(0.2);
     opacity: 0;
@@ -433,12 +478,15 @@ body {
     transform: translate(0, 0) scale(1);
     opacity: 0;
   }
+
   15% {
     opacity: 1;
   }
+
   60% {
     opacity: 0.8;
   }
+
   100% {
     transform: translate(1px, -19px) scale(0.15);
     opacity: 0;
@@ -450,12 +498,15 @@ body {
     transform: translate(0, 0) scale(0.85);
     opacity: 0;
   }
+
   25% {
     opacity: 0.95;
   }
+
   75% {
     opacity: 0.6;
   }
+
   100% {
     transform: translate(6px, -14px) scale(0.2);
     opacity: 0;
@@ -467,9 +518,11 @@ body {
     transform: translate(0, 0) scale(0.7);
     opacity: 0;
   }
+
   30% {
     opacity: 0.9;
   }
+
   100% {
     transform: translate(-2px, -17px) scale(0.1);
     opacity: 0;
@@ -477,10 +530,13 @@ body {
 }
 
 @keyframes vivid-fire-glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px rgba(244, 63, 94, 0.22), inset 0 0 8px rgba(251, 146, 60, 0.12);
     border-color: rgba(251, 113, 133, 0.6);
   }
+
   50% {
     box-shadow: 0 0 18px rgba(244, 63, 94, 0.42), inset 0 0 12px rgba(251, 146, 60, 0.25);
     border-color: rgba(244, 63, 94, 0.95);
@@ -520,4 +576,32 @@ body {
 
 .animate-fire-glow-pulse {
   animation: vivid-fire-glow-pulse 2s ease-in-out infinite;
+}
+
+
+/* ================= PROFIT / LOSS TAG BADGE ANIMATION ================= */
+@keyframes tag-appear-fade {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  8% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  85% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.animate-tag-badge {
+  animation: tag-appear-fade 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
