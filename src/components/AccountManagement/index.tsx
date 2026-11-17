@@ -304,7 +304,7 @@ export default function AccountManagement() {
       title: "Tài khoản",
       dataIndex: "taiKhoan",
       key: "taiKhoan",
-      width: 103,
+      width: 111,
       render: (taiKhoan: string, record: AccountItem) => (
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shadow-sm">
@@ -456,10 +456,10 @@ export default function AccountManagement() {
         title: "Tên Tool",
         dataIndex: "toolName",
         key: "toolName",
-        width: 160,
+        width: 170,
         render: (toolName: string) => (
           <span className="font-mono text-sm px-2 py-0.5">
-            {toolName.length > 13 ? toolName.slice(0, 13) + ".." : toolName}
+            {toolName.length > 10 ? toolName.slice(0, 13) + ".." : toolName}
           </span>
         ),
       },
