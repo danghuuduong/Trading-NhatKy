@@ -8,6 +8,7 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
   Select,
   Popconfirm,
   App,
@@ -44,6 +45,26 @@ const PHAN_TRAM_OPTIONS = [
   { label: "100%", value: 100 },
 ];
 
+// Hàm sắp xếp mảng theo số đằng trước (VD: 01, 05-tool abc, 06-tool qư, 08-qưqweqew...)
+const sortByLeadingNumber = <T,>(items: T[], getLabel: (item: T) => string): T[] => {
+  return [...items].sort((a, b) => {
+    const strA = String(getLabel(a) || "").trim();
+    const strB = String(getLabel(b) || "").trim();
+
+    const matchA = strA.match(/^(\d+)/);
+    const matchB = strB.match(/^(\d+)/);
+
+    const numA = matchA ? parseInt(matchA[1], 10) : Infinity;
+    const numB = matchB ? parseInt(matchB[1], 10) : Infinity;
+
+    if (numA !== numB) {
+      return numA - numB;
+    }
+
+    return strA.localeCompare(strB, undefined, { numeric: true, sensitivity: "base" });
+  });
+};
+
 export default function AccountManagement() {
   const { message } = App.useApp();
   const [accounts, setAccounts] = useState<AccountItem[]>([]);
@@ -53,6 +74,19 @@ export default function AccountManagement() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingAccount, setEditingAccount] = useState<AccountItem | null>(null);
   const [form] = Form.useForm<AccountFormValues>();
+
+  // Modal sửa thông tin Tool
+  const [isToolModalOpen, setIsToolModalOpen] = useState<boolean>(false);
+  const [editingToolTarget, setEditingToolTarget] = useState<{
+    account: AccountItem;
+    tool: ToolStat;
+  } | null>(null);
+  const [toolForm] = Form.useForm<ToolStat>();
+
+  // Danh sách tài khoản đã sắp xếp theo số đằng trước
+  const sortedAccounts = useMemo(() => {
+    return sortByLeadingNumber(accounts, (acc: AccountItem) => acc.taiKhoan);
+  }, [accounts]);
 
   // Fetch accounts
   const fetchAccounts = async (isSilent = false) => {
@@ -232,65 +266,69 @@ export default function AccountManagement() {
     }
   };
 
-  // Reset thống kê tool (Chỉ reset Win, Thua, Chuỗi thắng/thua cao nhất; Giữ nguyên Profit & Hoa hồng)
-  const handleResetTool = async (account: AccountItem, toolName: string) => {
-    try {
-      const updatedTools = account.tools.map((t) =>
-        t.toolName === toolName
-          ? {
-            ...t,
-            win: 0,
-            Thua: 0,
-            currentWinStreak: 0,
-            currentLossStreak: 0,
-            chuoiThangLienTiepCaoNhat: 0,
-            chuoiThuaLienTiepCaoNhat: 0,
-            // Giữ nguyên profit, hoaHongHienTai, tongHoaHongDaThu
-          }
-          : t
-      );
-      const res = await fetch(`/api/accounts?id=${account.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tools: updatedTools }),
-      });
-      if (!res.ok) throw new Error("Không thể reset tool");
-      message.success(`Đã reset thống kê tool ${toolName}`);
-      fetchAccounts();
-    } catch (error: any) {
-      message.error(error.message);
-    }
+  // Mở modal Sửa Tool
+  const handleOpenEditTool = (account: AccountItem, tool: ToolStat) => {
+    setEditingToolTarget({ account, tool });
+    toolForm.setFieldsValue({
+      toolName: tool.toolName || "",
+      profit: tool.profit ?? 0,
+      win: tool.win ?? 0,
+      Thua: tool.Thua ?? 0,
+      tut: tool.tut ?? 0,
+      KhoiluongVaoLenh: tool.KhoiluongVaoLenh ?? 0,
+      PhiGiaodich: tool.PhiGiaodich ?? 0,
+      currentWinStreak: tool.currentWinStreak ?? 0,
+      chuoiThangLienTiepCaoNhat: tool.chuoiThangLienTiepCaoNhat ?? 0,
+      currentLossStreak: tool.currentLossStreak ?? 0,
+      chuoiThuaLienTiepCaoNhat: tool.chuoiThuaLienTiepCaoNhat ?? 0,
+      hoaHongHienTai: tool.hoaHongHienTai ?? 0,
+      tongHoaHongDaThu: tool.tongHoaHongDaThu ?? 0,
+    });
+    setIsToolModalOpen(true);
   };
 
-  // Reset ALL toàn bộ thông số của tool về 0 (Win, Thua, Profit, Hoa hồng, Chuỗi...)
-  const handleResetAllTool = async (account: AccountItem, toolName: string) => {
+  // Submit Form Sửa Tool
+  const handleSubmitToolForm = async () => {
+    if (!editingToolTarget) return;
     try {
+      const values = await toolForm.validateFields();
+      const { account, tool: originalTool } = editingToolTarget;
+
       const updatedTools = account.tools.map((t) =>
-        t.toolName === toolName
+        t.toolName === originalTool.toolName
           ? {
             ...t,
-            win: 0,
-            Thua: 0,
-            profit: 0,
-            currentWinStreak: 0,
-            currentLossStreak: 0,
-            chuoiThangLienTiepCaoNhat: 0,
-            chuoiThuaLienTiepCaoNhat: 0,
-            hoaHongHienTai: 0,
-            tongHoaHongDaThu: 0,
-            KhoiluongVaoLenh: 0,
-            PhiGiaodich: 0,
-            tut: 0,
+            ...values,
+            toolName: String(values.toolName || "").trim(),
+            profit: Number(values.profit) || 0,
+            win: Number(values.win) || 0,
+            Thua: Number(values.Thua) || 0,
+            tut: Number(values.tut) || 0,
+            KhoiluongVaoLenh: Number(values.KhoiluongVaoLenh) || 0,
+            PhiGiaodich: Number(values.PhiGiaodich) || 0,
+            currentWinStreak: Number(values.currentWinStreak) || 0,
+            chuoiThangLienTiepCaoNhat: Number(values.chuoiThangLienTiepCaoNhat) || 0,
+            currentLossStreak: Number(values.currentLossStreak) || 0,
+            chuoiThuaLienTiepCaoNhat: Number(values.chuoiThuaLienTiepCaoNhat) || 0,
+            hoaHongHienTai: Number(values.hoaHongHienTai) || 0,
+            tongHoaHongDaThu: Number(values.tongHoaHongDaThu) || 0,
           }
           : t
       );
+
       const res = await fetch(`/api/accounts?id=${account.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tools: updatedTools }),
       });
-      if (!res.ok) throw new Error("Không thể reset all tool");
-      message.success(`Đã reset toàn bộ thông số của tool ${toolName} về 0`);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Không thể cập nhật thông tin tool");
+      }
+
+      message.success(`Cập nhật thông tin tool "${values.toolName}" thành công!`);
+      setIsToolModalOpen(false);
       fetchAccounts();
     } catch (error: any) {
       message.error(error.message);
@@ -496,7 +534,7 @@ export default function AccountManagement() {
           const total = (t.win || 0) + (t.Thua || 0);
           const rate = total > 0 ? (((t.win || 0) / total) * 100).toFixed(1) : "0.0";
           return (
-            <span className="text-gray-700 text-xs">
+            <span className="text-gray-500 text-xs">
               {rate}%
             </span>
           );
@@ -595,41 +633,31 @@ export default function AccountManagement() {
       // },
       {
         title: "Thao tác",
-        key: "actions",
-        width: 200,
+        key: "action",
+        width: 100,
+        align: "center",
         render: (_: any, t: ToolStat) => (
           <Space size="small">
-            <Popconfirm
-              title="Reset thống kê tool?"
-              description={`Đưa Win, Thua, Chuỗi kỷ lục -> về 0? (Profit và Hoa hồng được giữ nguyên)`}
-              onConfirm={() => handleResetTool(record, t.toolName)}
-              okText="Reset"
-              cancelText="Huỷ"
-            >
-              <Button size="small" type="default">
-                Reset
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title="Reset ALL tất cả chỉ số?"
-              onConfirm={() => handleResetAllTool(record, t.toolName)}
-              okText="Reset All"
-              cancelText="Huỷ"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger ghost>
-                Reset All
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title="Xoá tool này?"
-              onConfirm={() => handleDeleteTool(record, t.toolName)}
-              okText="Xoá"
-              cancelText="Huỷ"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <Tooltip title="Chỉnh sửa thông tin Tool">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined className="text-blue-600 hover:text-blue-700 text-base" />}
+                onClick={() => handleOpenEditTool(record, t)}
+              />
+            </Tooltip>
+            <Tooltip title="Xoá tool này">
+              <Popconfirm
+                title="Xoá tool này?"
+                description={`Bạn có chắc muốn xoá tool ${t.toolName}?`}
+                onConfirm={() => handleDeleteTool(record, t.toolName)}
+                okText="Xoá"
+                cancelText="Huỷ"
+                okButtonProps={{ danger: true }}
+              >
+                <Button size="small" type="text" danger icon={<DeleteOutlined className="text-base" />} />
+              </Popconfirm>
+            </Tooltip>
           </Space>
         ),
       },
@@ -696,7 +724,7 @@ export default function AccountManagement() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         <Table
           columns={columns}
-          dataSource={accounts.map((acc) => ({ ...acc, key: acc.id }))}
+          dataSource={sortedAccounts.map((acc: AccountItem) => ({ ...acc, key: acc.id }))}
           loading={loading}
           expandable={{
             expandedRowRender,
@@ -798,6 +826,256 @@ export default function AccountManagement() {
               </div>
             </div>
           )}
+        </Form>
+      </Modal>
+
+      {/* Modal Chỉnh Sửa Tool */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm border border-blue-100">
+              <EditOutlined />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-gray-800 leading-tight">
+                Chỉnh sửa thông số Tool
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                Tài khoản: <span className="font-bold text-blue-600 font-mono">{editingToolTarget?.account.taiKhoan}</span> • Tool: <span className="font-bold text-gray-500 font-mono">{editingToolTarget?.tool.toolName}</span>
+              </p>
+            </div>
+          </div>
+        }
+        open={isToolModalOpen}
+        onCancel={() => setIsToolModalOpen(false)}
+        footer={null}
+        centered
+        destroyOnHidden
+        width="min(700px, 75vw)"
+        styles={{ body: { padding: "5px 4px 4px", maxHeight: "80vh", overflowY: "auto" } }}
+      >
+        <Form
+          form={toolForm}
+          layout="vertical"
+          onFinish={handleSubmitToolForm}
+          className="tool-edit-form mt-2"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            {/* Hàng 1 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tên Tool</span>}
+              name="toolName"
+              rules={[{ required: true, message: "Vui lòng nhập tên Tool!" }]}
+              className="mb-0"
+            >
+              <Input
+                placeholder="VD: 05-tool abc..."
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-mono font-bold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tổng Lãi (K)</span>}
+              name="profit"
+              className="mb-0"
+            >
+              <InputNumber
+                placeholder="VD: 150, -50..."
+                step={0.1}
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-bold"
+              />
+            </Form.Item>
+
+            {/* Hàng 2 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Số ván Thắng (Win)</span>}
+              name="win"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Số ván Thua (Loss)</span>}
+              name="Thua"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 3 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tụt tối đa - Drawdown (K)</span>}
+              name="tut"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Khối lượng vào lệnh (K)</span>}
+              name="KhoiluongVaoLenh"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 4 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Phí giao dịch (K)</span>}
+              name="PhiGiaodich"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Hoa hồng hiện tại (K)</span>}
+              name="hoaHongHienTai"
+              className="mb-0"
+            >
+              <InputNumber
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 5 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thắng hiện tại</span>}
+              name="currentWinStreak"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thắng liên tiếp cao nhất</span>}
+              name="chuoiThangLienTiepCaoNhat"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 6 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thua hiện tại</span>}
+              name="currentLossStreak"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thua liên tiếp cao nhất</span>}
+              name="chuoiThuaLienTiepCaoNhat"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 7 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tổng hoa hồng đã thu (K)</span>}
+              name="tongHoaHongDaThu"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Mức thuế chịu của tài khoản (%)</span>}
+              className="mb-0"
+            >
+              <Input
+                value={`${editingToolTarget?.account.phanTramChiuThue ?? 50}%`}
+                disabled
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-bold bg-gray-50 text-gray-500"
+              />
+            </Form.Item>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+            <Button
+              onClick={() => setIsToolModalOpen(false)}
+              className="flex-1 rounded-xl h-11 font-semibold border-gray-200 hover:border-gray-400 text-gray-600"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="flex-1 rounded-xl h-11 bg-blue-600 hover:bg-blue-500 border-none text-white font-bold shadow-md shadow-blue-200"
+            >
+              Lưu thay đổi
+            </Button>
+          </div>
         </Form>
       </Modal>
     </div>

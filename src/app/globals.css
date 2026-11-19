@@ -605,3 +605,75 @@ body {
 .animate-tag-badge {
   animation: tag-appear-fade 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+
+/* ================= TOOL EDIT FORM FULL WIDTH INPUTS ================= */
+.tool-edit-form .ant-input-number {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.tool-edit-form .ant-input-number-input-wrap,
+.tool-edit-form .ant-input-number-input {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+/* ================= URGENT TASKS FILTER TOOLBAR ================= */
+.task-filter-select .ant-select-selector {
+  height: 40px !important;
+  border-radius: 12px !important;
+  border-color: #e5e7eb !important;
+  background-color: rgba(249, 250, 251, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.task-filter-select .ant-select-selector:hover {
+  border-color: #fb7185 !important;
+  background-color: #ffffff !important;
+}
+
+.task-filter-select.ant-select-focused .ant-select-selector {
+  border-color: #f43f5e !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.1) !important;
+}
+
+/* ================= CHỐNG TỰ ĐỘNG PHÓNG TO (AUTO-ZOOM) TRÊN ĐIỆN THOẠI ================= */
+/* 1. Loại bỏ độ trễ và chặn tự động phóng to khi chạm nhanh 2 lần (double-tap zoom) */
+html,
+body,
+button,
+a,
+input,
+select,
+textarea,
+.ant-btn,
+.ant-table,
+.ant-card,
+.ant-select,
+.ant-select-selector {
+  touch-action: manipulation;
+}
+
+/* 2. Ép font-size tối thiểu 16px cho tất cả ô nhập liệu / select trên màn hình di động 
+   Trình duyệt di động (iOS Safari & Android Chrome) luôn tự động zoom nếu font-size < 16px khi focus */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  .ant-input,
+  .ant-select,
+  .ant-select-selector,
+  .ant-select-selection-item,
+  .ant-select-selection-search-input,
+  .ant-input-number-input,
+  .ant-picker-input > input,
+  .ant-input-affix-wrapper input {
+    font-size: 16px !important;
+  }
+}
