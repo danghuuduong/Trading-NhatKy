@@ -113,7 +113,7 @@ export default function AccountManagement() {
     // Tự động tải lại mỗi 20 giây khi đang đứng ở trang này
     const interval = setInterval(() => {
       fetchAccounts(true);
-    }, 9000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
@@ -275,6 +275,10 @@ export default function AccountManagement() {
       win: tool.win ?? 0,
       Thua: tool.Thua ?? 0,
       tut: tool.tut ?? 0,
+      tiSo: tool.tiSo ?? 0,
+      khungB: tool.khungB ?? -4,
+      khungA: tool.khungA ?? 4,
+      botN: tool.botN ?? 1,
       KhoiluongVaoLenh: tool.KhoiluongVaoLenh ?? 0,
       PhiGiaodich: tool.PhiGiaodich ?? 0,
       currentWinStreak: tool.currentWinStreak ?? 0,
@@ -298,14 +302,16 @@ export default function AccountManagement() {
         t.toolName === originalTool.toolName
           ? {
             ...t,
-            tiSo: 0,
-            ...(t.botN !== undefined ? { botN: 1 } : {}),
             ...values,
             toolName: String(values.toolName || "").trim(),
             profit: Number(values.profit) || 0,
             win: Number(values.win) || 0,
             Thua: Number(values.Thua) || 0,
             tut: Number(values.tut) || 0,
+            tiSo: values.tiSo !== undefined && values.tiSo !== null ? Number(values.tiSo) : t.tiSo,
+            khungB: values.khungB !== undefined && values.khungB !== null ? Number(values.khungB) : t.khungB,
+            khungA: values.khungA !== undefined && values.khungA !== null ? Number(values.khungA) : t.khungA,
+            botN: values.botN !== undefined && values.botN !== null ? Number(values.botN) : t.botN,
             KhoiluongVaoLenh: Number(values.KhoiluongVaoLenh) || 0,
             PhiGiaodich: Number(values.PhiGiaodich) || 0,
             currentWinStreak: Number(values.currentWinStreak) || 0,
@@ -927,6 +933,71 @@ export default function AccountManagement() {
                 className="!w-full !rounded-xl text-sm font-bold"
               />
             </Form.Item>
+
+            {/* Hàng Cấu hình Tỉ số & Khung (Bot Tí số & Bot 2K) */}
+            <div className="col-span-1 sm:col-span-2 bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200/80">
+              <div className="text-xs font-black uppercase text-blue-700 tracking-wider mb-2.5 flex items-center gap-1.5">
+                <span>🎯</span> Cấu hình Tỉ số & Khung (Đồng bộ về bot khi bấm Reload)
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Form.Item
+                  label={<span className="font-bold text-gray-600 text-xs">Tỉ số hiện tại</span>}
+                  name="tiSo"
+                  className="mb-0"
+                  tooltip="Tỉ số hiện tại của bot (Xanh ra -1/-2, Đỏ ra +1/+2)"
+                >
+                  <InputNumber
+                    step={1}
+                    placeholder="0"
+                    style={{ width: "100%", height: 38 }}
+                    className="!w-full !rounded-xl text-sm font-bold"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={<span className="font-bold text-gray-600 text-xs">Khung dưới (B)</span>}
+                  name="khungB"
+                  className="mb-0"
+                  tooltip="Biên dưới (âm), VD: -4, -8, -13, -18. Khi tỉ số <= khung dưới thì đánh Đỏ."
+                >
+                  <InputNumber
+                    step={1}
+                    placeholder="-4"
+                    style={{ width: "100%", height: 38 }}
+                    className="!w-full !rounded-xl text-sm font-bold text-rose-600"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={<span className="font-bold text-gray-600 text-xs">Khung trên (A)</span>}
+                  name="khungA"
+                  className="mb-0"
+                  tooltip="Biên trên (dương), VD: 4, 8, 13, 18. Khi tỉ số >= khung trên thì đánh Xanh."
+                >
+                  <InputNumber
+                    step={1}
+                    placeholder="4"
+                    style={{ width: "100%", height: 38 }}
+                    className="!w-full !rounded-xl text-sm font-bold text-blue-600"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={<span className="font-bold text-gray-600 text-xs">Bộ đếm Bot 2K (n)</span>}
+                  name="botN"
+                  className="mb-0"
+                  tooltip="Chỉ dành cho bot 2K: số n nhân tiền cược (2K * n)"
+                >
+                  <InputNumber
+                    min={1}
+                    step={1}
+                    placeholder="1"
+                    style={{ width: "100%", height: 38 }}
+                    className="!w-full !rounded-xl text-sm font-bold text-purple-600"
+                  />
+                </Form.Item>
+              </div>
+            </div>
 
             {/* Hàng 2 */}
             <Form.Item
