@@ -42,6 +42,10 @@ export async function POST(request: Request) {
     const phiGD = Math.round(Number(body.phi ?? body.PhiGiaodich ?? 0) * 100) / 100;
     const hasTut = body.tut !== undefined && body.tut !== null;
     const tutVal = hasTut ? Math.round(Number(body.tut) * 100) / 100 : 0;
+    // Trạng thái bot: snapshot ghi đè — dùng $set, không cộng dồn
+    const hasTiSo = body.tiSo !== undefined && body.tiSo !== null;
+    const hasKhung = body.khungB !== undefined && body.khungA !== undefined;
+    const hasBotN = body.botN !== undefined && body.botN !== null;
 
     if (!existingTool) {
       // 2a. Chưa có toolName này -> push phần tử mới vào mảng
@@ -55,6 +59,10 @@ export async function POST(request: Request) {
         KhoiluongVaoLenh: kl,
         PhiGiaodich: phiGD,
         ...(hasTut ? { tut: tutVal } : {}),
+        // Trạng thái bot: snapshot ghi đè mỗi ván
+        ...(hasTiSo ? { tiSo: Number(body.tiSo) } : {}),
+        ...(hasKhung ? { khungB: Number(body.khungB), khungA: Number(body.khungA) } : {}),
+        ...(hasBotN ? { botN: Number(body.botN) } : {}),
         currentWinStreak: curWin,
         currentLossStreak: curLoss,
         chuoiThangLienTiepCaoNhat: curWin,
@@ -104,6 +112,10 @@ export async function POST(request: Request) {
             "tools.$[elem].chuoiThangLienTiepCaoNhat": maxWin,
             "tools.$[elem].chuoiThuaLienTiepCaoNhat": maxLoss,
             ...(hasTut ? { "tools.$[elem].tut": tutVal } : {}),
+            // Ghi đè trạng thái bot (snapshot — không dùng $inc)
+            ...(hasTiSo ? { "tools.$[elem].tiSo": Number(body.tiSo) } : {}),
+            ...(hasKhung ? { "tools.$[elem].khungB": Number(body.khungB), "tools.$[elem].khungA": Number(body.khungA) } : {}),
+            ...(hasBotN ? { "tools.$[elem].botN": Number(body.botN) } : {}),
             updatedAt: new Date(),
           },
         },

@@ -270,6 +270,8 @@ export default function AccountManagement() {
             KhoiluongVaoLenh: 0,
             PhiGiaodich: 0,
             tut: 0,
+            tiSo: 0,
+            ...(t.botN !== undefined ? { botN: 1 } : {}),
           }
           : t
       );
@@ -561,6 +563,44 @@ export default function AccountManagement() {
                 </Tag>
               </Tooltip>
             </div>
+          );
+        },
+      },
+      // Cột Tỉ số / Khung: hiển thị trạng thái nội tại bot — snapshot từ API
+      // Bot TíSố (1/3/4/5): "tiSo / [khungB, khungA]"  VD: 1 / [-4, 4]
+      // Bot 2K: "n / [n]"  VD: 3 / [3]
+      {
+        title: "Tỉ số / Khung",
+        key: "tiSo_khung",
+        render: (_: any, t: ToolStat) => {
+          // Bot 2K chỉ có botN, không có tiSo/khungB/khungA
+          if (t.botN !== undefined && t.tiSo === undefined) {
+            const n = Number(t.botN) || 1;
+            return (
+              <Tooltip title={`Bộ đếm nhân hiện tại: ${n}`}>
+                <span className="font-mono text-xs text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                  {n} / [{n}]
+                </span>
+              </Tooltip>
+            );
+          }
+          // Bot TíSố: hiển thị tiSo / [khungB, khungA]
+          const tiSo = t.tiSo ?? "—";
+          const kB = t.khungB;
+          const kA = t.khungA;
+          if (kB === undefined || kA === undefined) {
+            return <span className="text-gray-400 text-xs">—</span>;
+          }
+          const color = Number(tiSo) > 0 ? "blue" : Number(tiSo) < 0 ? "volcano" : "default";
+          return (
+            <Tooltip title={`Tỉ số: ${tiSo} | Khung: [${kB}, ${kA}]`}>
+              <span className="font-mono font-bold text-xs">
+                <Tag color={color} className="font-bold px-1.5 py-0.5 text-xs m-0">
+                  {tiSo}
+                </Tag>
+                <span className="text-gray-500"> / [{kB}, {kA}]</span>
+              </span>
+            </Tooltip>
           );
         },
       },

@@ -6,6 +6,11 @@ export interface ToolStat {
   KhoiluongVaoLenh?: number;
   PhiGiaodich?: number;
   tut?: number;
+  // Trạng thái nội tại bot — snapshot ghi đè mỗi ván, dùng để khôi phục khi tắt/mất mạng
+  tiSo?: number;    // Tỉ số hiện tại (bot 1/3/4/5)
+  khungB?: number;  // Khung biên dưới hiện tại (bot 1/3/4/5)
+  khungA?: number;  // Khung biên trên hiện tại (bot 1/3/4/5)
+  botN?: number;    // Bộ đếm nhân hiện tại (bot 2K)
   chuoiThangLienTiepCaoNhat?: number;
   chuoiThuaLienTiepCaoNhat?: number;
   currentWinStreak?: number;
