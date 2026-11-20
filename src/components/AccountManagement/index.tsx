@@ -8,6 +8,7 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
   Select,
   Popconfirm,
   App,
@@ -19,7 +20,6 @@ import {
   UserAddOutlined,
   DeleteOutlined,
   EditOutlined,
-  ReloadOutlined,
   UserOutlined,
   KeyOutlined,
   CheckCircleOutlined,
@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { AccountItem, AccountFormValues, ToolStat } from "./types";
+import AnimatedProfitCell, { formatMoney } from "./AnimatedProfitCell";
 
 const PHAN_TRAM_OPTIONS = [
   { label: "0%", value: 0 },
@@ -44,6 +45,26 @@ const PHAN_TRAM_OPTIONS = [
   { label: "100%", value: 100 },
 ];
 
+// Hàm sắp xếp mảng theo số đằng trước (VD: 01, 05-tool abc, 06-tool qư, 08-qưqweqew...)
+const sortByLeadingNumber = <T,>(items: T[], getLabel: (item: T) => string): T[] => {
+  return [...items].sort((a, b) => {
+    const strA = String(getLabel(a) || "").trim();
+    const strB = String(getLabel(b) || "").trim();
+
+    const matchA = strA.match(/^(\d+)/);
+    const matchB = strB.match(/^(\d+)/);
+
+    const numA = matchA ? parseInt(matchA[1], 10) : Infinity;
+    const numB = matchB ? parseInt(matchB[1], 10) : Infinity;
+
+    if (numA !== numB) {
+      return numA - numB;
+    }
+
+    return strA.localeCompare(strB, undefined, { numeric: true, sensitivity: "base" });
+  });
+};
+
 export default function AccountManagement() {
   const { message } = App.useApp();
   const [accounts, setAccounts] = useState<AccountItem[]>([]);
@@ -54,23 +75,47 @@ export default function AccountManagement() {
   const [editingAccount, setEditingAccount] = useState<AccountItem | null>(null);
   const [form] = Form.useForm<AccountFormValues>();
 
+  // Modal sửa thông tin Tool
+  const [isToolModalOpen, setIsToolModalOpen] = useState<boolean>(false);
+  const [editingToolTarget, setEditingToolTarget] = useState<{
+    account: AccountItem;
+    tool: ToolStat;
+  } | null>(null);
+  const [toolForm] = Form.useForm<ToolStat>();
+
+  // Danh sách tài khoản đã sắp xếp theo số đằng trước
+  const sortedAccounts = useMemo(() => {
+    return sortByLeadingNumber(accounts, (acc: AccountItem) => acc.taiKhoan);
+  }, [accounts]);
+
   // Fetch accounts
-  const fetchAccounts = async () => {
-    setLoading(true);
+  const fetchAccounts = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const res = await fetch("/api/accounts");
       if (!res.ok) throw new Error("Không thể tải danh sách tài khoản");
       const data = await res.json();
       setAccounts(data);
     } catch (error: any) {
-      message.error("Lỗi: " + error.message);
+      if (!isSilent) {
+        message.error("Lỗi: " + error.message);
+      } else {
+        console.error("Lỗi tự động tải danh sách tài khoản:", error);
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAccounts();
+
+    // Tự động tải lại mỗi 20 giây khi đang đứng ở trang này
+    const interval = setInterval(() => {
+      fetchAccounts(true);
+    }, 9000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Tính toán metrics cho từng account
@@ -221,67 +266,71 @@ export default function AccountManagement() {
     }
   };
 
-  // Reset thống kê tool (Chỉ reset Win, Thua, Chuỗi thắng/thua cao nhất; Giữ nguyên Profit & Hoa hồng)
-  const handleResetTool = async (account: AccountItem, toolName: string) => {
-    try {
-      const updatedTools = account.tools.map((t) =>
-        t.toolName === toolName
-          ? {
-            ...t,
-            win: 0,
-            Thua: 0,
-            currentWinStreak: 0,
-            currentLossStreak: 0,
-            chuoiThangLienTiepCaoNhat: 0,
-            chuoiThuaLienTiepCaoNhat: 0,
-            // Giữ nguyên profit, hoaHongHienTai, tongHoaHongDaThu
-          }
-          : t
-      );
-      const res = await fetch(`/api/accounts?id=${account.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tools: updatedTools }),
-      });
-      if (!res.ok) throw new Error("Không thể reset tool");
-      message.success(`Đã reset thống kê tool ${toolName}`);
-      fetchAccounts();
-    } catch (error: any) {
-      message.error(error.message);
-    }
+  // Mở modal Sửa Tool
+  const handleOpenEditTool = (account: AccountItem, tool: ToolStat) => {
+    setEditingToolTarget({ account, tool });
+    toolForm.setFieldsValue({
+      toolName: tool.toolName || "",
+      profit: tool.profit ?? 0,
+      win: tool.win ?? 0,
+      Thua: tool.Thua ?? 0,
+      tut: tool.tut ?? 0,
+      KhoiluongVaoLenh: tool.KhoiluongVaoLenh ?? 0,
+      PhiGiaodich: tool.PhiGiaodich ?? 0,
+      currentWinStreak: tool.currentWinStreak ?? 0,
+      chuoiThangLienTiepCaoNhat: tool.chuoiThangLienTiepCaoNhat ?? 0,
+      currentLossStreak: tool.currentLossStreak ?? 0,
+      chuoiThuaLienTiepCaoNhat: tool.chuoiThuaLienTiepCaoNhat ?? 0,
+      hoaHongHienTai: tool.hoaHongHienTai ?? 0,
+      tongHoaHongDaThu: tool.tongHoaHongDaThu ?? 0,
+    });
+    setIsToolModalOpen(true);
   };
 
-  // Reset ALL toàn bộ thông số của tool về 0 (Win, Thua, Profit, Hoa hồng, Chuỗi...)
-  const handleResetAllTool = async (account: AccountItem, toolName: string) => {
+  // Submit Form Sửa Tool
+  const handleSubmitToolForm = async () => {
+    if (!editingToolTarget) return;
     try {
+      const values = await toolForm.validateFields();
+      const { account, tool: originalTool } = editingToolTarget;
+
       const updatedTools = account.tools.map((t) =>
-        t.toolName === toolName
+        t.toolName === originalTool.toolName
           ? {
             ...t,
-            win: 0,
-            Thua: 0,
-            profit: 0,
-            currentWinStreak: 0,
-            currentLossStreak: 0,
-            chuoiThangLienTiepCaoNhat: 0,
-            chuoiThuaLienTiepCaoNhat: 0,
-            hoaHongHienTai: 0,
-            tongHoaHongDaThu: 0,
-            KhoiluongVaoLenh: 0,
-            PhiGiaodich: 0,
-            tut: 0,
             tiSo: 0,
             ...(t.botN !== undefined ? { botN: 1 } : {}),
+            ...values,
+            toolName: String(values.toolName || "").trim(),
+            profit: Number(values.profit) || 0,
+            win: Number(values.win) || 0,
+            Thua: Number(values.Thua) || 0,
+            tut: Number(values.tut) || 0,
+            KhoiluongVaoLenh: Number(values.KhoiluongVaoLenh) || 0,
+            PhiGiaodich: Number(values.PhiGiaodich) || 0,
+            currentWinStreak: Number(values.currentWinStreak) || 0,
+            chuoiThangLienTiepCaoNhat: Number(values.chuoiThangLienTiepCaoNhat) || 0,
+            currentLossStreak: Number(values.currentLossStreak) || 0,
+            chuoiThuaLienTiepCaoNhat: Number(values.chuoiThuaLienTiepCaoNhat) || 0,
+            hoaHongHienTai: Number(values.hoaHongHienTai) || 0,
+            tongHoaHongDaThu: Number(values.tongHoaHongDaThu) || 0,
           }
           : t
       );
+
       const res = await fetch(`/api/accounts?id=${account.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tools: updatedTools }),
       });
-      if (!res.ok) throw new Error("Không thể reset all tool");
-      message.success(`Đã reset toàn bộ thông số của tool ${toolName} về 0`);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Không thể cập nhật thông tin tool");
+      }
+
+      message.success(`Cập nhật thông tin tool "${values.toolName}" thành công!`);
+      setIsToolModalOpen(false);
       fetchAccounts();
     } catch (error: any) {
       message.error(error.message);
@@ -295,19 +344,36 @@ export default function AccountManagement() {
       title: "Tài khoản",
       dataIndex: "taiKhoan",
       key: "taiKhoan",
-      width: 190,
+      width: 111,
       render: (taiKhoan: string, record: AccountItem) => (
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shadow-sm">
             <UserOutlined />
           </div>
           <div className="flex flex-col">
-            <span className="font-mono font-bold text-blue-700 bg-blue-50/80 px-2.5 py-0.5 rounded border border-blue-200/60 inline-block text-xs">
+            <span className="font-mono font-bold text-blue-700 bg-blue-50/80 px- py-0.5 rounded border border-blue-200/60 inline-block text-xs">
               {taiKhoan}
             </span>
           </div>
         </div>
       ),
+    },
+
+    // Cột 3: Tổng profit
+    {
+      title: "Tổng Lãi",
+      key: "tongProfit",
+      width: 150,
+      render: (_, record: AccountItem) => {
+        const { totalProfit } = getAccountMetrics(record);
+        return (
+          <AnimatedProfitCell
+            value={totalProfit}
+            showPlus
+            size="md"
+          />
+        );
+      },
     },
     // Cột 2: Ngày tham gia
     {
@@ -325,49 +391,30 @@ export default function AccountManagement() {
         );
       },
     },
-    // Cột 3: Tổng profit
-    {
-      title: "Tổng profit",
-      key: "tongProfit",
-      width: 160,
-      render: (_, record: AccountItem) => {
-        const { totalProfit } = getAccountMetrics(record);
-        const isPos = totalProfit >= 0;
-        return (
-          <span
-            className={`font-black text-sm px-2.5 py-1 rounded  inline-block ${isPos
-              ? "text-emerald-700  border-emerald-200"
-              : "text-rose-700  border-rose-200"
-              }`}
-          >
-            {isPos ? `+${totalProfit.toLocaleString()}` : totalProfit.toLocaleString()} K
-          </span>
-        );
-      },
-    },
     // Cột 4: Hoa hồng Đã thu
     {
-      title: "Hoa hồng Đã thu",
+      title: "Đã thu",
       key: "tongHoaHongDaThu",
       width: 170,
       render: (_, record: AccountItem) => {
         const { totalHoaHongDaThu } = getAccountMetrics(record);
         return (
-          <span className="font-bold text-green-700  px-2.5 py-1 rounded  text-sm inline-block">
-            +{totalHoaHongDaThu.toLocaleString()} K
+          <span className="font-bold text-green-700 px-2.5 py-1 rounded text-sm inline-block">
+            +{formatMoney(totalHoaHongDaThu).fullStr}
           </span>
         );
       },
     },
     // Cột 5: Hoa Hồng hiện tại + Nút [ĐÃ NHẬN]
     {
-      title: "Hoa Hồng hiện tại",
+      title: "Hoa Hồng",
       key: "hoaHongHienTai",
       width: 250,
       render: (_, record: AccountItem) => {
         const { totalHoaHongHienTai } = getAccountMetrics(record);
         const isPos = totalHoaHongHienTai >= 0;
         const hasCommission = totalHoaHongHienTai !== 0;
+        const formatted = formatMoney(totalHoaHongHienTai);
 
         return (
           <div className="flex items-center gap-2">
@@ -377,12 +424,12 @@ export default function AccountManagement() {
                 : "text-rose-700 bg-rose-50 border-rose-200"
                 }`}
             >
-              {isPos ? `+${totalHoaHongHienTai.toLocaleString()}` : totalHoaHongHienTai.toLocaleString()} K
+              {isPos ? `+${formatted.fullStr}` : `-${formatted.fullStr}`}
             </span>
 
             <Popconfirm
               title="Xác nhận thu hoa hồng?"
-              description={`Xác nhận đã nhận ${isPos ? `+${totalHoaHongHienTai}` : totalHoaHongHienTai}K hoa hồng từ tài khoản ${record.taiKhoan}?`}
+              description={`Xác nhận đã nhận ${isPos ? `+${formatted.fullStr}` : `-${formatted.fullStr}`} hoa hồng từ tài khoản ${record.taiKhoan}?`}
               onConfirm={() => handleSettleCommission(record.id, record.taiKhoan, totalHoaHongHienTai)}
               okText="Nhận"
               cancelText="Hủy"
@@ -444,51 +491,44 @@ export default function AccountManagement() {
   const expandedRowRender = (record: AccountItem) => {
     const list = record.tools || [];
 
-    const subColumns = [
+    const subColumns: TableProps<ToolStat>["columns"] = [
       {
         title: "Tên Tool",
         dataIndex: "toolName",
         key: "toolName",
+        width: 170,
         render: (toolName: string) => (
-          <span className="font-bold text-blue-600 font-mono text-sm bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
-            {toolName}
+          <span className="font-mono text-sm px-2 py-0.5">
+            {toolName.length > 10 ? toolName.slice(0, 13) + ".." : toolName}
           </span>
         ),
       },
       {
-        title: "Thắng / Thua",
-        key: "win_loss",
-        render: (_: any, t: ToolStat) => (
-          <div className="flex items-center gap-1 font-bold text-xs">
-            <Tag color="success" className="font-bold px-1.5 py-0.5 text-xs m-0">
-              {t.win ?? 0}
-            </Tag>
-            <span className="text-gray-400 font-semibold">/</span>
-            <Tag color="error" className="font-bold px-1.5 py-0.5 text-xs m-0">
-              {t.Thua ?? 0}
-            </Tag>
-          </div>
+        title: "Lãi",
+        dataIndex: "profit",
+        key: "profit",
+        align: "center",
+        render: (profit: number) => (
+          <AnimatedProfitCell
+            value={Number(profit) || 0}
+            showPlus
+            size="xs"
+          />
         ),
       },
       {
-        title: "Lợi nhuận",
-        dataIndex: "profit",
-        key: "profit",
-        render: (profit: number) => {
-          const num = Number(profit) || 0;
-          const isPos = num >= 0;
-          return (
-            <span
-              className={`font-black text-xs px-2 py-0.5 rounded ${isPos
-                ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
-                : "text-rose-700 bg-rose-50 border border-rose-200"
-                }`}
-            >
-              {isPos ? `+${num.toLocaleString()}` : num.toLocaleString()} K
-            </span>
-          );
-        },
+        title: "Win / Thua",
+        key: "win_loss",
+        align: "center",
+        render: (_: any, t: ToolStat) => (
+          <div className="flex items-center justify-center gap-1 text-xs text-center">
+            <span className="">{t.win ?? 0}</span>
+            <span className="text-gray-400 font-semibold">/</span>
+            <span className="">{t.Thua ?? 0}</span>
+          </div>
+        ),
       },
+
       {
         title: "%",
         key: "winrate",
@@ -496,34 +536,8 @@ export default function AccountManagement() {
           const total = (t.win || 0) + (t.Thua || 0);
           const rate = total > 0 ? (((t.win || 0) / total) * 100).toFixed(1) : "0.0";
           return (
-            <span className="font-semibold text-gray-700 text-xs">
+            <span className="text-gray-500 text-xs">
               {rate}%
-            </span>
-          );
-        },
-      },
-      {
-        title: "Khối lượng",
-        dataIndex: "KhoiluongVaoLenh",
-        key: "KhoiluongVaoLenh",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <span className="font-semibold text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-              {num.toLocaleString()} K
-            </span>
-          );
-        },
-      },
-      {
-        title: "Phí",
-        dataIndex: "PhiGiaodich",
-        key: "PhiGiaodich",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <span className="font-semibold text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-              {num.toLocaleString()} K
             </span>
           );
         },
@@ -536,13 +550,40 @@ export default function AccountManagement() {
           const num = Number(val) || 0;
           return (
             <Tag color={num > 0 ? "volcano" : "default"} className="font-bold px-2 py-0.5 text-xs m-0">
-              {num > 0 ? `-${num.toLocaleString()}` : "0"} K
+              {num > 0 ? `-${formatMoney(num).fullStr}` : "0 K"}
             </Tag>
           );
         },
       },
       {
-        title: "Thắng / Thua Max",
+        title: "Khối lượng",
+        dataIndex: "KhoiluongVaoLenh",
+        key: "KhoiluongVaoLenh",
+        render: (val: number) => {
+          const num = Number(val) || 0;
+          return (
+            <span className="text-xs px-2 py-0.5">
+              {formatMoney(num).fullStr}
+            </span>
+          );
+        },
+      },
+      {
+        title: "Phí GD",
+        dataIndex: "PhiGiaodich",
+        key: "PhiGiaodich",
+        render: (val: number) => {
+          const num = Number(val) || 0;
+          return (
+            <span className="font-semibold text-xs text-amber-700 px-2 py-0.5">
+              {formatMoney(num).fullStr}
+            </span>
+          );
+        },
+      },
+
+      {
+        title: "Chuỗi liên tiếp",
         key: "max_streaks",
         render: (_: any, t: ToolStat) => {
           const maxWin = t.chuoiThangLienTiepCaoNhat ?? 0;
@@ -550,17 +591,13 @@ export default function AccountManagement() {
           const maxLoss = t.chuoiThuaLienTiepCaoNhat ?? 0;
           const currentLoss = t.currentLossStreak ?? 0;
           return (
-            <div className="flex items-center gap-1 font-bold text-xs">
+            <div className="flex items-center gap-1 text-xs">
               <Tooltip title={`Chuỗi thắng hiện tại: ${currentWin} ván`}>
-                <Tag color="orange" className="font-bold px-1.5 py-0.5 text-xs m-0">
-                  {maxWin} ❄️
-                </Tag>
+                {maxWin} ❄️
               </Tooltip>
-              <span className="text-gray-400 font-semibold">/</span>
+              <span className="text-gray-400 ">/</span>
               <Tooltip title={`Chuỗi thua hiện tại: ${currentLoss} ván`}>
-                <Tag color="purple" className="font-bold px-1.5 py-0.5 text-xs m-0">
-                  {maxLoss} 🔥
-                </Tag>
+                {maxLoss} 🔥
               </Tooltip>
             </div>
           );
@@ -605,71 +642,62 @@ export default function AccountManagement() {
         },
       },
       // Cột MỚI 1: Hoa Hồng hiện tại của Tool
-      {
-        title: "Hoa Hồng hiện tại",
-        dataIndex: "hoaHongHienTai",
-        key: "hoaHongHienTai",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          const isPos = num >= 0;
-          return (
-            <Tag color={isPos ? "success" : "error"} className="font-bold px-2 py-0.5 text-xs">
-              {isPos ? `+${num}` : num} K
-            </Tag>
-          );
-        },
-      },
-      // Cột MỚI 2: Tổng hoa hồng đã thu của Tool
-      {
-        title: "Hoa hồng đã thu",
-        dataIndex: "tongHoaHongDaThu",
-        key: "tongHoaHongDaThu",
-        render: (val: number) => {
-          const num = Number(val) || 0;
-          return (
-            <Tag color="gold" className="font-bold px-2 py-0.5 text-xs">
-              +{num.toLocaleString()} K
-            </Tag>
-          );
-        },
-      },
+      // {
+      //   title: "Hoa Hồng",
+      //   dataIndex: "hoaHongHienTai",
+      //   key: "hoaHongHienTai",
+      //   render: (val: number) => {
+      //     const num = Number(val) || 0;
+      //     const isPos = num >= 0;
+      //     const formatted = formatMoney(num);
+      //     return (
+      //       <span className={`px-2 py-0.5 text-xs font-semibold ${isPos ? "text-green-600" : "text-red-600"}`}>
+      //         {isPos ? `+${num}` : num} K
+      //       </span>
+      //     );
+      //   },
+      // },
+      // // Cột MỚI 2: Tổng hoa hồng đã thu của Tool
+      // {
+      //   title: "Đã thu",
+      //   dataIndex: "tongHoaHongDaThu",
+      //   key: "tongHoaHongDaThu",
+      //   render: (val: number) => {
+      //     const num = Number(val) || 0;
+      //     return (
+      //       <span className="px-2 py-0.5 text-xs text-yellow-600 font-semibold">
+      //         +{formatMoney(num).fullStr}
+      //       </span>
+      //     );
+      //   },
+      // },
       {
         title: "Thao tác",
-        key: "actions",
-        width: 200,
+        key: "action",
+        width: 100,
+        align: "center",
         render: (_: any, t: ToolStat) => (
           <Space size="small">
-            <Popconfirm
-              title="Reset thống kê tool?"
-              description={`Đưa Win, Thua, Chuỗi kỷ lục -> về 0? (Profit và Hoa hồng được giữ nguyên)`}
-              onConfirm={() => handleResetTool(record, t.toolName)}
-              okText="Reset"
-              cancelText="Huỷ"
-            >
-              <Button size="small" type="default">
-                Reset
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title="Reset ALL tất cả chỉ số?"
-              onConfirm={() => handleResetAllTool(record, t.toolName)}
-              okText="Reset All"
-              cancelText="Huỷ"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger ghost>
-                Reset All
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title="Xoá tool này?"
-              onConfirm={() => handleDeleteTool(record, t.toolName)}
-              okText="Xoá"
-              cancelText="Huỷ"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <Tooltip title="Chỉnh sửa thông tin Tool">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined className="text-blue-600 hover:text-blue-700 text-base" />}
+                onClick={() => handleOpenEditTool(record, t)}
+              />
+            </Tooltip>
+            <Tooltip title="Xoá tool này">
+              <Popconfirm
+                title="Xoá tool này?"
+                description={`Bạn có chắc muốn xoá tool ${t.toolName}?`}
+                onConfirm={() => handleDeleteTool(record, t.toolName)}
+                okText="Xoá"
+                cancelText="Huỷ"
+                okButtonProps={{ danger: true }}
+              >
+                <Button size="small" type="text" danger icon={<DeleteOutlined className="text-base" />} />
+              </Popconfirm>
+            </Tooltip>
           </Space>
         ),
       },
@@ -711,23 +739,15 @@ export default function AccountManagement() {
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-800 tracking-tight">
-              Quản lý Account & Tool Baccarat
+              Quản lý Tool
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Quản lý tài khoản, mật khẩu, theo dõi % hoa hồng phải chịu và thu hoa hồng theo chu kỳ
+              Quản lý tài khoản, mật khẩu, theo dõi %
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={fetchAccounts}
-            loading={loading}
-            className="hover:border-blue-500"
-          >
-            Tải lại
-          </Button>
           <Button
             type="primary"
             icon={<UserAddOutlined />}
@@ -744,7 +764,7 @@ export default function AccountManagement() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         <Table
           columns={columns}
-          dataSource={accounts.map((acc) => ({ ...acc, key: acc.id }))}
+          dataSource={sortedAccounts.map((acc: AccountItem) => ({ ...acc, key: acc.id }))}
           loading={loading}
           expandable={{
             expandedRowRender,
@@ -833,19 +853,269 @@ export default function AccountManagement() {
                       }`}
                   >
                     {editingMetrics.totalHoaHongHienTai >= 0
-                      ? `+${editingMetrics.totalHoaHongHienTai}`
-                      : editingMetrics.totalHoaHongHienTai} K
+                      ? `+${formatMoney(editingMetrics.totalHoaHongHienTai).fullStr}`
+                      : `-${formatMoney(editingMetrics.totalHoaHongHienTai).fullStr}`}
                   </div>
                 </div>
                 <div className="bg-white p-2.5 rounded-lg border border-slate-100">
                   <div className="text-gray-500">Hoa hồng đã thu:</div>
                   <div className="font-black text-sm text-amber-600 mt-0.5">
-                    +{editingMetrics.totalHoaHongDaThu} K
+                    +{formatMoney(editingMetrics.totalHoaHongDaThu).fullStr}
                   </div>
                 </div>
               </div>
             </div>
           )}
+        </Form>
+      </Modal>
+
+      {/* Modal Chỉnh Sửa Tool */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm border border-blue-100">
+              <EditOutlined />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-gray-800 leading-tight">
+                Chỉnh sửa thông số Tool
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                Tài khoản: <span className="font-bold text-blue-600 font-mono">{editingToolTarget?.account.taiKhoan}</span> • Tool: <span className="font-bold text-gray-500 font-mono">{editingToolTarget?.tool.toolName}</span>
+              </p>
+            </div>
+          </div>
+        }
+        open={isToolModalOpen}
+        onCancel={() => setIsToolModalOpen(false)}
+        footer={null}
+        centered
+        destroyOnHidden
+        width="min(700px, 75vw)"
+        styles={{ body: { padding: "5px 4px 4px", maxHeight: "80vh", overflowY: "auto" } }}
+      >
+        <Form
+          form={toolForm}
+          layout="vertical"
+          onFinish={handleSubmitToolForm}
+          className="tool-edit-form mt-2"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            {/* Hàng 1 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tên Tool</span>}
+              name="toolName"
+              rules={[{ required: true, message: "Vui lòng nhập tên Tool!" }]}
+              className="mb-0"
+            >
+              <Input
+                placeholder="VD: 05-tool abc..."
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-mono font-bold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tổng Lãi (K)</span>}
+              name="profit"
+              className="mb-0"
+            >
+              <InputNumber
+                placeholder="VD: 150, -50..."
+                step={0.1}
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-bold"
+              />
+            </Form.Item>
+
+            {/* Hàng 2 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Số ván Thắng (Win)</span>}
+              name="win"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Số ván Thua (Loss)</span>}
+              name="Thua"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 3 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tụt tối đa - Drawdown (K)</span>}
+              name="tut"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Khối lượng vào lệnh (K)</span>}
+              name="KhoiluongVaoLenh"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 4 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Phí giao dịch (K)</span>}
+              name="PhiGiaodich"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Hoa hồng hiện tại (K)</span>}
+              name="hoaHongHienTai"
+              className="mb-0"
+            >
+              <InputNumber
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 5 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thắng hiện tại</span>}
+              name="currentWinStreak"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thắng liên tiếp cao nhất</span>}
+              name="chuoiThangLienTiepCaoNhat"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 6 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thua hiện tại</span>}
+              name="currentLossStreak"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Chuỗi thua liên tiếp cao nhất</span>}
+              name="chuoiThuaLienTiepCaoNhat"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            {/* Hàng 7 */}
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Tổng hoa hồng đã thu (K)</span>}
+              name="tongHoaHongDaThu"
+              className="mb-0"
+            >
+              <InputNumber
+                min={0}
+                step={0.1}
+                placeholder="0"
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-semibold"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-bold text-gray-500 text-xs">Mức thuế chịu của tài khoản (%)</span>}
+              className="mb-0"
+            >
+              <Input
+                value={`${editingToolTarget?.account.phanTramChiuThue ?? 50}%`}
+                disabled
+                style={{ width: "100%", height: 42 }}
+                className="!w-full !rounded-xl text-sm font-bold bg-gray-50 text-gray-500"
+              />
+            </Form.Item>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+            <Button
+              onClick={() => setIsToolModalOpen(false)}
+              className="flex-1 rounded-xl h-11 font-semibold border-gray-200 hover:border-gray-400 text-gray-600"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="flex-1 rounded-xl h-11 bg-blue-600 hover:bg-blue-500 border-none text-white font-bold shadow-md shadow-blue-200"
+            >
+              Lưu thay đổi
+            </Button>
+          </div>
         </Form>
       </Modal>
     </div>

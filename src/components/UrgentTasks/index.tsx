@@ -271,10 +271,11 @@ export default function UrgentTasks() {
         return (
           <div className="flex items-center gap-2.5">
             <span
-              className={`font-semibold text-sm ${isCompleted
+              className={`truncate max-w-[250px] inline-block align-bottom font-semibold text-sm ${isCompleted
                 ? "line-through text-gray-400 font-normal italic"
                 : "text-gray-800"
                 }`}
+              title={text}
             >
               {text}
             </span>
@@ -327,11 +328,7 @@ export default function UrgentTasks() {
               className={isOverdue && !isCompleted ? "text-rose-500 animate-bounce" : "text-gray-400"}
             />
             <span>{dateObj.format("DD/MM/YYYY HH:mm")}</span>
-            {isOverdue && !isCompleted && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold">
-                Quá hạn
-              </span>
-            )}
+
           </div>
         );
       },
@@ -607,23 +604,27 @@ export default function UrgentTasks() {
         {/* Filter + Table: Chung 1 Card */}
         <div className="bg-white rounded-2xl mt-4 border border-gray-100 shadow-sm overflow-hidden">
           {/* Filter Bar */}
-          <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-3 border-b border-gray-100">
+          <div className="p-4 sm:px-5 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3.5 border-b border-gray-100 bg-white">
             {/* Tìm kiếm bên trái */}
-            <Input
-              prefix={<SearchOutlined className="text-gray-400" />}
-              placeholder="Tìm kiếm công việc..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              className="w-full md:w-72 h-10 rounded-xl border-gray-200 hover:border-rose-400 focus:border-rose-400"
-            />
+            <div className="w-full md:w-80 lg:w-96 shrink-0">
+              <Input
+                prefix={<SearchOutlined className="text-gray-400 text-sm mr-1.5" />}
+                placeholder="Tìm kiếm công việc..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                style={{ height: 40 }}
+                className="w-full !rounded-xl !border-gray-200 bg-gray-50/60 hover:bg-white focus:bg-white hover:!border-rose-400 focus:!border-rose-400 text-sm transition-all shadow-none"
+              />
+            </div>
 
             {/* Bộ lọc bên phải: linh hoạt mobile */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-start md:justify-end">
               <Select
                 value={filterPriority}
                 onChange={setFilterPriority}
-                className="flex-1 sm:flex-none sm:w-36 h-10 shrink-0 min-w-[130px]"
+                style={{ height: 40 }}
+                className="task-filter-select flex-1 sm:flex-none sm:w-40 h-10 shrink-0 min-w-[140px]"
                 options={[
                   { value: "ALL", label: "Tất cả mức độ" },
                   {
@@ -644,7 +645,8 @@ export default function UrgentTasks() {
               <Select
                 value={filterStatus}
                 onChange={setFilterStatus}
-                className="flex-1 sm:flex-none sm:w-40 h-10 shrink-0 min-w-[140px]"
+                style={{ height: 40 }}
+                className="task-filter-select flex-1 sm:flex-none sm:w-44 h-10 shrink-0 min-w-[150px]"
                 options={[
                   { value: "ALL", label: "Tất cả trạng thái" },
                   { value: "PENDING", label: "— Chưa làm" },
@@ -655,9 +657,9 @@ export default function UrgentTasks() {
 
               {/* Xóa hàng loạt */}
               {selectedRowKeys.length > 0 && (
-                <div className="flex items-center gap-3 bg-rose-50/70 border border-rose-200 px-4 py-2 rounded-xl animate-fadeIn shrink-0">
+                <div className="flex items-center gap-3 bg-rose-50/70 border border-rose-200 px-3.5 h-10 rounded-xl animate-fadeIn shrink-0">
                   <span className="text-xs font-bold text-rose-700 whitespace-nowrap">
-                    Đã chọn <span className="underline">{selectedRowKeys.length}</span> công việc
+                    Đã chọn <span className="underline">{selectedRowKeys.length}</span>
                   </span>
 
                   <Popconfirm
@@ -675,7 +677,7 @@ export default function UrgentTasks() {
                       icon={<DeleteOutlined />}
                       className="rounded-lg font-bold shadow-sm"
                     >
-                      Xóa đã chọn
+                      Xóa
                     </Button>
                   </Popconfirm>
                 </div>
