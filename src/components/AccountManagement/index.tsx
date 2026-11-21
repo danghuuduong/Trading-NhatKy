@@ -279,6 +279,7 @@ export default function AccountManagement() {
       khungB: tool.khungB ?? -4,
       khungA: tool.khungA ?? 4,
       botN: tool.botN ?? 1,
+      cycleProfit: tool.cycleProfit ?? 0,
       KhoiluongVaoLenh: tool.KhoiluongVaoLenh ?? 0,
       PhiGiaodich: tool.PhiGiaodich ?? 0,
       currentWinStreak: tool.currentWinStreak ?? 0,
@@ -312,6 +313,7 @@ export default function AccountManagement() {
             khungB: values.khungB !== undefined && values.khungB !== null ? Number(values.khungB) : t.khungB,
             khungA: values.khungA !== undefined && values.khungA !== null ? Number(values.khungA) : t.khungA,
             botN: values.botN !== undefined && values.botN !== null ? Number(values.botN) : t.botN,
+            cycleProfit: values.cycleProfit !== undefined && values.cycleProfit !== null ? Number(values.cycleProfit) : t.cycleProfit,
             KhoiluongVaoLenh: Number(values.KhoiluongVaoLenh) || 0,
             PhiGiaodich: Number(values.PhiGiaodich) || 0,
             currentWinStreak: Number(values.currentWinStreak) || 0,
@@ -606,6 +608,31 @@ export default function AccountManagement() {
                 {maxLoss} 🔥
               </Tooltip>
             </div>
+          );
+        },
+      },
+      // Cột Lãi Chu Kỳ (Cycle Profit): hiển thị lãi/lỗ ròng của chu kỳ hiện tại
+      {
+        title: "Lãi Chu Kỳ",
+        key: "cycleProfit",
+        render: (_: any, t: ToolStat) => {
+          if (t.cycleProfit === undefined || t.cycleProfit === null) {
+            return <span className="text-gray-400 text-xs">—</span>;
+          }
+          const cp = Number(t.cycleProfit) || 0;
+          const isPos = cp > 0;
+          const isNeg = cp < 0;
+          const color = isPos ? "cyan" : isNeg ? "volcano" : "default";
+          const text = `${isPos ? "+" : ""}${cp} K`;
+
+          return (
+            <Tooltip title={`Lãi chu kỳ hiện tại: ${text} | Target: +10K | Gỡ: -100K`}>
+              <span className="font-mono font-bold text-xs">
+                <Tag color={color} className="font-bold px-1.5 py-0.5 text-xs m-0">
+                  {text}
+                </Tag>
+              </span>
+            </Tooltip>
           );
         },
       },
@@ -937,9 +964,23 @@ export default function AccountManagement() {
             {/* Hàng Cấu hình Tỉ số & Khung (Bot Tí số & Bot 2K) */}
             <div className="col-span-1 sm:col-span-2 bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200/80">
               <div className="text-xs font-black uppercase text-blue-700 tracking-wider mb-2.5 flex items-center gap-1.5">
-                <span>🎯</span> Cấu hình Tỉ số & Khung (Đồng bộ về bot khi bấm Reload)
+                <span>🎯</span> Cấu hình Tỉ số, Khung & Chu Kỳ (Đồng bộ về bot khi bấm Reload)
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                <Form.Item
+                  label={<span className="font-bold text-gray-600 text-xs">Lãi chu kỳ (K)</span>}
+                  name="cycleProfit"
+                  className="mb-0"
+                  tooltip="Lãi/lỗ ròng chu kỳ hiện tại của bot (Target: +10K, Ngưỡng gỡ: -100K)"
+                >
+                  <InputNumber
+                    step={1}
+                    placeholder="0"
+                    style={{ width: "100%", height: 38 }}
+                    className="!w-full !rounded-xl text-sm font-bold text-cyan-700"
+                  />
+                </Form.Item>
+
                 <Form.Item
                   label={<span className="font-bold text-gray-600 text-xs">Tỉ số hiện tại</span>}
                   name="tiSo"

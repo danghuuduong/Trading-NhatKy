@@ -11,6 +11,7 @@ export interface ToolStat {
   khungB?: number;  // Khung biên dưới hiện tại (bot 1/3/4/5)
   khungA?: number;  // Khung biên trên hiện tại (bot 1/3/4/5)
   botN?: number;    // Bộ đếm nhân hiện tại (bot 2K)
+  cycleProfit?: number; // Lãi/lỗ ròng chu kỳ hiện tại (bot 1/3/4/5)
   chuoiThangLienTiepCaoNhat?: number;
   chuoiThuaLienTiepCaoNhat?: number;
   currentWinStreak?: number;
